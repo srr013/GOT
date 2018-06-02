@@ -1,7 +1,8 @@
 {
   "name": "socket-chat-example",
   "version": "0.0.1",
-  "description": "my first socket.io app",
+  "start": "node index.js"
+  "description": "Game of Thrones Board Game ONLINE",
   "dependencies": {
     "express": "^4.16.3",
     "socket.io": "^2.1.1"
