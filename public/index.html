@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Play Board Games Online</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    </head>
+<body>
+    <div id="topbar">
+        <div class="inline left third">File Button</div>
+        <div class="inline middle third">Tracks</div>
+        <div class="inline right third">Player Table</div>
+    </div>
+    <div id="gameboard">Game
+    </div>
+    <form action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form>
+    <div id="bottombar">
+        <div id = "actionbox" class="inline left third">ActionBox</div>
+        <div id = "validation" class="inline middle third">Tabbed box: Validation and Chat
+	  <ul id="messages"></ul>	
+	</div>
+        <div id = "playercards" class="inline right third">Player Cards</div>
+    </div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  $(function () {
+    var socket = io();
+    $('form').submit(function(){
+      socket.emit('chat message', $('#m').val());
+      $('#m').val('');
+      return false;
+    });
+    socket.on('chat message', function(msg){
+      $('#messages').append($('<li>').text(msg));
+    });
+  });
+</script>
+</body>
+</html>
