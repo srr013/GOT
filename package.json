@@ -1,7 +1,7 @@
 {
   "name": "socket-chat-example",
   "version": "0.0.1",
-  "start": "node index.js"
+  "start": "node index.js",
   "description": "Game of Thrones Board Game ONLINE",
   "dependencies": {
     "express": "^4.16.3",
