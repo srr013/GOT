@@ -1,0 +1,80 @@
+{
+name: "Skinchanger Scout"
+L: {
+lowest:"Discards all available Power tokens"
+all: "Discards 2 Power tokens or as many as able"
+}
+W: "All Power tokens bid on this attack are immediately returned"
+}
+#
+{
+name: "Preemptive Raid"
+L: {
+lowest: "Chooses one of the following: 1. Destroys 2 of their units anywhere, or 2. is reduced 2 positions on their highest influence track."
+all: "Nothing happens"
+}
+W: "The wildlings immediately attack again with a strength of 6. You do not participate."
+}
+#
+{
+name: "Mammoth Raiders"
+L: {
+lowest: "Destroys 3 of their units anywhere"
+all: "Destroys 2 of their units anywhere"
+}
+W: "May retrieve 1 discarded House card of their choice"
+}
+#
+{
+name: "Crow Killers"
+L: {
+lowest: "Replaces all available Knights with Footmen. Any knights unable to be replaced are destroyed."
+all:
+}
+W: "May immediately replace up to 2 Footmen with Knights"
+}
+#
+{
+name: "A King Beyond the Wall"
+L: {
+lowest: "Move his token to the lowest position on every influence track"
+all: "In turn order, choose either Fiefdom or King's Court influence track and moves to the lowest position"
+}
+W: "Moves their token to the top of the Influence track of their choice"
+}
+#
+{
+name: "Massing in the Milkwater"
+L: {
+lowest: "If you have more than one House card in your hard, discard all cards with the highest combat strength"
+all: "If you have more than one House card in your hand, choose and discard one of those cards"
+}
+W: "Return the entire House card pile to your hand"
+}
+#
+{
+name: "Silence at the Wall"
+L: {
+lowest: "Nothing happens"
+all: "Nothing happens"
+}
+W: "Nothing happens"
+}
+#
+{
+name: "The Horde Descends"
+L: {
+lowest: "Destroys 2 of his units at one of his Castles or Strongholds. If unable, destroys 2 of his units anywhere"
+all: "Destroys 1 unit anywhere"
+}
+W: "May muster forces in any one Castle or Stronghold"
+}
+#
+{
+name: "Rattleshirt's Raiders"
+L: {
+lowest: "Is reduced 2 positions on the Supply track (or to 0)"
+all: "Is reduced 1 position on the Supply track (or to 0)"
+}
+W: "Is increased 1 position on the Supply track (or to 6)"
+}

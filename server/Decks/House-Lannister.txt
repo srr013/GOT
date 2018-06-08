@@ -1,0 +1,28 @@
+"Cersei Lannister"
+0
+"If you win this combat, you may remove one of your opponent's order tokens from anywhere on the board.""
+#
+"Ser Kevan Lannister"
+1
+"If you are attacking, all of your participating Footman (including supporting Lannister footmen) add+2 combat strength instead of +1."
+#
+"Tyrion Lannister"
+1
+"You may immediately return your opponent's House card to his hand.He must then choose a different House card. If he has no other House cards in hand, he cannot use a House card this combat."
+#
+"Ser Jaime Lannister"
+2
+S
+#
+"The Hound"
+2
+FF
+#
+"Ser Gregor Clegane"
+3
+SSS
+#
+"Tywin Lannister"
+4
+"If you win this combat gain two Power tokens"
+#

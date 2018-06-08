@@ -1,0 +1,31 @@
+To do:
+Complete Player, Deck, card file read & import
+Configure joining a game (solely through navigating the the page). How to maintain/select player?
+  -Look into auth?
+
+Implement action forms on client and action functions in Game
+  funcs: raid, move/attack, defense, support, consolidate power, submit data (any form)
+  client forms: action form for above actions, bidding form for tracks and wildlings, choice form for season cards.
+  Submit turn action > tie into Game.playersReady
+
+Implement Card-related functions in Game.
+  -fighting: swords and fortress
+
+Implement client DOM updates and HTML updates using data from Game:
+  activity log (main source of game info)
+  square display and updating
+    display: Castle/Stronghold, square ID, selected move, number and type of units + defense + support
+
+
+Phase 2:
+Wildlings attacks and effects
+Ships in port
+
+House card list:
+https://www.scribd.com/document/151060549/House-Cards-Reference-Sheet
+
+Wildling card list:
+file:///home/srr013/Downloads/Manifest_of_Wildlings_Cards.pdf
+
+Seasons:
+https://cf.geekdo-images.com/images/pic2428329.png
