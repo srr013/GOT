@@ -1,8 +1,10 @@
 const socket = io();
-const GAME_SQUARES = []
+let USERDATA = [];
+let STORE = sessionStorage;
+let GAME = {};
 
-function sendMessage(message){
-    socket.emit(message);
+function sendMessage(message, data){
+    socket.emit(message, data);
     }
 
 $('form').submit(function(){
@@ -11,24 +13,35 @@ $('form').submit(function(){
   $('#m').val('');
   return false;
 });
+
+$(function () {
+    if (document.URL.includes('#game')) {
+      GAME = JSON.parse(STORE.game);
+      let i = 0;
+      let map = document.getElementById('gameboard');
+      while (i < GAME.map.length){
+        let j = 0;
+        while (j < GAME.map[i].length){
+          map.appendChild(createSquare(GAME.map,i,j));
+          j++;
+        }
+      i++;
+      }
+    }
+});
+
 socket.on('chat message', function(msg){
   $('#messages').append($('<li>').text(msg));
     });
 
-socket.on('new map', (data) => {
-    let i = 0;
-    let map = document.getElementById('gameboard');
-    while (i < data.length){
-        let j = 0;
-        while (j < data[i].length){
-            GAME_SQUARES.push(data[i][j])
-            map.appendChild(createSquare(data,i,j));
-            j++;
-        }
-        i++;
-    }
-    
+socket.on('open game', (data) => {
+  STORE.setItem("game",JSON.stringify(data));
+  window.location = "/games/"+data.gameId+"#game"
 });
+socket.on('user data', (data)=>{
+  USERDATA = data;
+  console.log("user data", USERDATA);
+})
 
 function toggleMenu(x){
    let list = Array.from(x.children);
@@ -43,17 +56,33 @@ function toggleMenu(x){
     }
 };
 
+function toggleGameList(){
+  let gameList = document.getElementById("gamelist");
+  USERDATA.forEach((game) => {
+    let g = document.createElement('div');
+    g.addEventListener('click', function(){
+      sendMessage('load game',game.gameId);
+    });
+    g.textContent = game.gameId;
+    gameList.appendChild(g);
+  }
+)
+
+
+}
+
 //Takes in an object and an array of key/value pairs built as arrays.
+//KV should be the key/value pairs that change. This function will trigger when the user deselects the square during the Orders/Action placement phase.
 function updateSquObject(event, obj, ...kv){
     console.log("updating object");
     let squareID = arguments[0].target.id;
     //update the square object and send it to the server
     let i = 0;
-    while (i < GAME_SQUARES.length){
-        if (GAME_SQUARES[i].id == squareID){
+    while (i < GAME.map.length){
+        if (GAME.map[i].id == squareID){
             //update square object
-            GAME_SQUARES[i].terrain = 0;
-            socket.emit('object update', GAME_SQUARES[i]); 
+            GAME.map[i].terrain = 0;
+            socket.emit('object update', GAME.map[i]);
         }
         i++;
     }
@@ -63,7 +92,7 @@ function updateSquObject(event, obj, ...kv){
 //calls update to the DOM
 socket.on('object update', (object) => {
     console.log("client update received", object);
-    GAME_SQUARES[object.index] = object;
+    GAME.map[object.index] = object;
     updateDOMFromSquareObject(object);
 });
 
@@ -106,8 +135,8 @@ function createSquare(data,i,j){
     if (squ.bonus != ''){
         bottomRight.textContent = squ.bonus;
     }
-        
+
     square.addEventListener('click', updateSquObject);
-    
+
     return square;
 }
