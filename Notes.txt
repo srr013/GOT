@@ -1,7 +1,7 @@
 To do:
-Complete Player, Deck, card file read & import
-Configure joining a game (solely through navigating the the page). How to maintain/select player?
-  -Look into auth?
+
+Deck, card file read & import, card object setup
+Test and update joining a game
 
 Implement action forms on client and action functions in Game
   funcs: raid, move/attack, defense, support, consolidate power, submit data (any form)

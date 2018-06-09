@@ -1,7 +1,8 @@
 const socket = io();
-let USERDATA = [];
+let USERDATA = {index:-1, alias:'', code:''};
 let STORE = sessionStorage;
 let GAME = {};
+setUserData();
 
 function sendMessage(message, data){
     socket.emit(message, data);
@@ -19,10 +20,10 @@ $(function () {
       GAME = JSON.parse(STORE.game);
       let i = 0;
       let map = document.getElementById('gameboard');
-      while (i < GAME.map.length){
+      while (i < GAME.gameObj.map.length){
         let j = 0;
-        while (j < GAME.map[i].length){
-          map.appendChild(createSquare(GAME.map,i,j));
+        while (j < GAME.gameObj.map[i].length){
+          map.appendChild(createSquare(GAME.gameObj.map,i,j));
           j++;
         }
       i++;
@@ -35,13 +36,41 @@ socket.on('chat message', function(msg){
     });
 
 socket.on('open game', (data) => {
-  STORE.setItem("game",JSON.stringify(data));
-  window.location = "/games/"+data.gameId+"#game"
+  let x = STORE.setItem("game",JSON.stringify(data));
+  window.location = "/games/"+data.gameObj.gameId+"#game"
 });
-socket.on('user data', (data)=>{
-  USERDATA = data;
-  console.log("user data", USERDATA);
+socket.on('userIndex', (data)=>{
+  console.log("setting index from server", data)
+  STORE.setItem("userIndex", data);
+  USERDATA.index = data;
 })
+
+function setUserData(){
+  if (USERDATA.index > 0){
+    document.getElementById("loginForm").style.display = 'none';
+  } else if (STORE.getItem("userIndex") != null){
+    console.log("retrieving index from store" ,STORE.getItem("userIndex"));
+    USERDATA.index = STORE.getItem("userIndex");
+    document.getElementById("loginForm").style.display = 'none';
+  }
+}
+
+//this takes over login form submission and sends a socket message with form data
+window.addEventListener("load", function () {
+  function sendData() {
+    USERDATA.displayname = form.elements['displayname'].value;
+    USERDATA.authcode = form.elements['authcode'].value;
+    let data = {displayname: USERDATA.displayname, authcode: USERDATA.authcode};
+    console.log("login form data", data);
+    socket.emit('login', data);
+  }
+  var form = document.getElementById("loginForm");
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    form.style.display = 'none';
+    sendData();
+  });
+});
 
 function toggleMenu(x){
    let list = Array.from(x.children);
@@ -78,10 +107,10 @@ function updateSquObject(event, obj, ...kv){
     let squareID = arguments[0].target.id;
     //update the square object and send it to the server
     let i = 0;
-    while (i < GAME.map.length){
-        if (GAME.map[i].id == squareID){
+    while (i < GAME.gameObj.map.length){
+        if (GAME.gameObj.map[i].id == squareID){
             //update square object
-            GAME.map[i].terrain = 0;
+            GAME.gameObj.map[i].terrain = 0;
             socket.emit('object update', GAME.map[i]);
         }
         i++;
@@ -92,7 +121,7 @@ function updateSquObject(event, obj, ...kv){
 //calls update to the DOM
 socket.on('object update', (object) => {
     console.log("client update received", object);
-    GAME.map[object.index] = object;
+    GAME.gameObj.map[object.index] = object;
     updateDOMFromSquareObject(object);
 });
 

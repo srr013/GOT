@@ -19,7 +19,7 @@ exports.loadMapFromFile = function (){
                     i++;
                 }
                 if (s != ''){
-                    sObject = square(s, j, String.fromCharCode(c));
+                    sObject = new Square(s, j, String.fromCharCode(c));
                     sObject.index = objectCounter;
                     ++objectCounter;
                     row.push(sObject);
@@ -38,28 +38,35 @@ exports.loadMapFromFile = function (){
     return columns(results);
 };
 
-function square(data, row, column){
-    let i = 0;
-    let obj = {id: column+row, index: 0, terrain:'',castle:'',bonus:'', units:{footman:0, knight:0, seige:0, ship:0}};
+class Square{
+  constructor(data, row, column){
+    this.id = column+row;
+    this.index = 0;
+    this.terrain = '';
+    this.castle = '';
+    this.bonus = '';
+    this.units = {footman:0, knight:0, seige:0, ship:0};
     let commacounter = 0;
+    let i = 0;
     while (i < data.length){
         if (data[i] != ','){
             if (commacounter == 0){
-                obj.terrain += data[i];
+                this.terrain += data[i];
                 i++;
             } else if (commacounter == 1){
-                obj.castle += data[i];
+                this.castle += data[i];
                 i++;
             }else if (commacounter == 2){
-                obj.bonus += data[i]
+                this.bonus += data[i]
                 i++;
-            } // units?
+            }
             }else{
                 commacounter += 1;
                 i++;
             }
         }
-    return obj;
+    return this;
+  }
 }
 
 

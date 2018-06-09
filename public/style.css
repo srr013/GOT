@@ -35,6 +35,12 @@ html {
     justify-content:flex-start;
     border: .1rem solid black;
 }
+#loginForm{
+  position: absolute;
+  left: 45vw;
+  top: 35vh;
+}
+
 .square{
     flex:column;
 }

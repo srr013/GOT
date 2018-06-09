@@ -5,7 +5,7 @@ let io = require('socket.io')(http);
 let fs = require('fs');
 
 let Game = require('./server/Game.js');
-let GameObect = require('./server/GameObject.js');
+let GameObject = require('./server/GameObject.js');
 
 let savedGamesFilePath = __dirname+"/server/Games/"
 
@@ -18,8 +18,7 @@ let server = http.listen(process.env.PORT
   console.log('Server started');
 });
 
-let SOCKET_LIST = {};
-let PLAYER_LIST = {};
+let USER_LIST = [];
 let GAME_LIST = [];
 
 io.on('connection', function(socket){
@@ -33,19 +32,32 @@ io.on('connection', function(socket){
       console.log("message sent")
       io.emit('chat message',msg);
   });
-    socket.on('new game', () => {
+    socket.on('login', (user) => {
+      let i = 0;
+      while (i < USER_LIST){
+        if (USER_LIST[i].authcode == user.authcode){
+          io.emit('userIndex', i)
+          return
+        }
+      }
+      user.index = USER_LIST.length;
+      USER_LIST.push(user);
+      io.emit('userIndex', user.index);
+    })
+    socket.on('new game', (userIndex) => {
       let gameid = GAME_LIST.length;
-      let game = createGame(gameid);
+      let game = createGame(gameid, USER_LIST[userIndex]);
       GAME_LIST[gameid] = game;
-      console.log("gamelist", GAME_LIST);
+      console.log("new game", game);
       socket.emit('open game', game);
       });
-  socket.on('load game', (gameid) => {
+  socket.on('load game', (gameid, userIndex) => {
       console.log("loading game");
       //Should check HTTP request for gameID and check the game list for that ID. If not there then load game from file, add to game list, and deliver the game object
       let game = GAME_LIST[gameid];
       var nsp = io.of('/Games/'+ game.gameid);//create namespace for this game
       socket.emit('open game', game);
+  socket.on('join game', (gameid, USER_LIST[userIndex]))
     });
         //This could be problematic because it takes the object data from the client instead of calculating it itself. Should likely just get the object ID and changes from the client and maintain the squares on the server.
         socket.on('object update', (object) => {
@@ -56,9 +68,10 @@ io.on('connection', function(socket){
     });
 });
 
-createGame = (gameid) => {
+createGame = (gameid, userIndex) => {
   let gameObj = new GameObject(gameid); //game variables and data
   let game = new Game(gameObj,3,10); //gameplay and turn progression
+  game.addPlayer(USER_LIST[userIndex]);
   console.log("game object created", game);
   return game;
 }

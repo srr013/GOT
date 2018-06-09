@@ -22,10 +22,31 @@
         <div class="inline right third">Player Table</div>
     </div>
     <div id="gameboard">
+      <form id='loginForm'>
+        Display name:<br>
+        <input type="text" name="displayname"><br>
+        Auth Code:<br>
+        <input type="text" name="authcode">
+        <input type="submit" value='Sign In'>
+      </form>
     </div>
     <div id="bottombar">
         <div id = "actionbox" class="bottom inline left third">
           <form id='flexform'>
+            <input class='actionRound' type='list' name='Select Order'>
+            //Add conditional forms here?
+            //if move: checkbox "retain square?", checkbox "attack?", destination - ?text?, retreat position - ?text?
+            //if raid: list-name:priority,consolidatepower/raid/defense
+            destination - ?text?
+            //if support, de
+
+            //Bidding form
+            //tokens to bid on track 1
+            //tokens to bid on track 2
+            //tokens to bid on track 3
+            //some validation to ensure bids aren't > total
+
+            <input type='submit' value='Save Order'
           </form>
         </div>
         <div id = "validation" class="bottom inline middle third">
