@@ -45,7 +45,7 @@ class Square{
     this.terrain = '';
     this.castle = '';
     this.bonus = '';
-    this.units = {footman:0, knight:0, seige:0, ship:0};
+    this.units = {footman:0, knight:0, seige:0, ship:0, token:0};
     let commacounter = 0;
     let i = 0;
     while (i < data.length){

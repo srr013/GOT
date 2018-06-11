@@ -3,16 +3,117 @@ let app = express();
 let http = require('http').Server(app);;
 let io = require('socket.io')(http);
 let fs = require('fs');
+let bodyParser = require('body-parser');
+let passport = require('passport')
+app.use(passport.initialize());
+app.use(passport.session());
+let mongoose = require('mongoose');
+let session = require('express-session');
+let MongoStore = require('connect-mongo')(session);
+let routes = require('./router.js');
+var bcrypt = require('bcrypt');
 
 let Game = require('./server/Game.js');
 let GameObject = require('./server/GameObject.js');
+let GameFuncs = require('./server/GameFunctions.js');
 
 let savedGamesFilePath = __dirname+"/server/Games/"
 
+//connect to MongoDB
+const User = require('./models/User.js');
+mongoose.connect('mongodb://localhost/testForAuth');
+var db = mongoose.connection;
 
-//start listening
+//handle mongo error
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function () {
+  console.log("db connected");
+});
+//use sessions for tracking logins
+app.use(session({
+  secret: 'playgamesonline',
+  resave: true,
+  saveUninitialized: false,
+  store: new MongoStore({
+    mongooseConnection: db
+  }),
+}));
+// parse incoming requests
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use('/', routes);
 app.use(express.static('public'));
 app.use('/games/*', express.static('public'))
+
+
+let LocalStrategy = require('passport-local').Strategy;
+
+function validPassword(pw){
+  return true;
+}
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    User.findOne({ username: username }, function (err, user) {
+      console.log(user);
+      if (err) { return done(err); }
+      if (!user) {
+        return done(null, false, { message: 'Incorrect username.' });
+      }
+      if (!validPassword(password)) {
+        return done(null, false, { message: 'Incorrect password.' });
+      }
+      return done(null, user);
+    });
+  }
+));
+
+// passport.use(new LocalStrategy(
+//   function(username, password, done) {
+//       User.findOne({
+//         username: username
+//       }, function(err, user) {
+//         if (err) {
+//           return done(err);
+//         }
+//
+//         if (!user) {
+//           return done(null, false);
+//         }
+//         console.log(password, user.password);
+//         bcrypt.compare(password,user.password).then(function (result){
+//           if(result == true){
+//             return done(null, user);
+//           }else{
+//             return done(null, false);
+//           }
+//         })
+//       });
+//   }
+// ));
+// used to serialize the user for the session
+passport.serializeUser(function(user, done) {
+    done(null, user.id);
+});
+
+// used to deserialize the user
+passport.deserializeUser(function(id, done) {
+    User.findById(id, function(err, user) {
+        done(err, user);
+    });
+});
+
+// catch 404 and forward to error handler
+app.use(function (req, res, next) {
+  console.log("req?", req);
+  var err = new Error('File Not Found');
+  err.status = 404;
+  next(err);
+});
+app.use(function (err, req, res, next) {
+  res.status(err.status || 500);
+  res.send(err.message);
+});
+//start listening
 let server = http.listen(process.env.PORT
 || 3000, function(){
   console.log('Server started');
@@ -23,7 +124,6 @@ let GAME_LIST = [];
 
 io.on('connection', function(socket){
   console.log('a user connected');
-  io.emit('user data', GAME_LIST);
   socket.on('disconnect', function(){
       //should check to see if anyone in the room and save the game state to a file if not
     console.log('user disconnected');
@@ -32,23 +132,22 @@ io.on('connection', function(socket){
       console.log("message sent")
       io.emit('chat message',msg);
   });
-    socket.on('login', (user) => {
-      let i = 0;
-      while (i < USER_LIST){
-        if (USER_LIST[i].authcode == user.authcode){
-          io.emit('userIndex', i)
-          return
-        }
-      }
-      user.index = USER_LIST.length;
-      USER_LIST.push(user);
-      io.emit('userIndex', user.index);
-    })
+    // socket.on('login', (req) => {
+      // let i = 0;
+      // while (i < USER_LIST){
+      //   if (USER_LIST[i].authcode == user.authcode){
+      //     io.emit('userIndex', i)
+      //     return
+      //   }
+      // }
+      // user.index = USER_LIST.length;
+      // USER_LIST.push(user);
+      // io.emit('userIndex', user.index);
+    //})
     socket.on('new game', (userIndex) => {
-      let gameid = GAME_LIST.length;
+      let gameid = Math.round(Math.random()*100000000000);
       let game = createGame(gameid, USER_LIST[userIndex]);
       GAME_LIST[gameid] = game;
-      console.log("new game", game);
       socket.emit('open game', game);
       });
   socket.on('load game', (gameid, userIndex) => {
@@ -60,19 +159,25 @@ io.on('connection', function(socket){
   socket.on('join game', (gameid, USER_LIST[userIndex]))
     });
         //This could be problematic because it takes the object data from the client instead of calculating it itself. Should likely just get the object ID and changes from the client and maintain the squares on the server.
-        socket.on('object update', (object) => {
-            console.log("server object update", object);
+    socket.on('object update', (object) => {
+        console.log("server object update", object);
         GAME_LIST[object.gameid][object.index] = object;
         socket.emit('object update', object);
         console.log(GAME_LIST);
+    });
+    socket.on('submit turn', (object) => {
+      //let game = GAME_LIST[object.gameObj.gameId];
+      if (object.gameObj.gameVariables.phase == 'start'){
+        let game = GameFuncs.stepThrough(object);
+        socket.emit('object update', game);
+      }
     });
 });
 
 createGame = (gameid, userIndex) => {
   let gameObj = new GameObject(gameid); //game variables and data
   let game = new Game(gameObj,3,10); //gameplay and turn progression
-  game.addPlayer(USER_LIST[userIndex]);
-  console.log("game object created", game);
+  GameFuncs.addPlayer(USER_LIST[userIndex], game);
   return game;
 }
 
@@ -87,12 +192,12 @@ let saveGames = function(){
   GAME_LIST.forEach((game) =>{
       fs.writeFile(savedGamesFilePath+game.gameId+'.txt', JSON.stringify(game), function(err) {
         if(err) {
-            return console.log(err);
+            return console.log("error loading", err);
         }
+      });
         console.log("File saved");
     });
-  });
-};
+  };
 
 
 //Run on server start to load saved games
@@ -104,10 +209,12 @@ let start = function(){
         } else{
         files.forEach( function( file, index ) {
           let name = file.replace('.txt','');
+          console.log(name);
           fs.readFile(savedGamesFilePath+file, 'utf8', function (err,data) {
               if (err) {
                 return console.log(err);
               }
+              console.log(data);
               GAME_LIST[name] = JSON.parse(data);
             });
         });

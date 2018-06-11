@@ -1,12 +1,16 @@
 To do:
 
-Deck, card file read & import, card object setup
-Test and update joining a game
+Can currently establish a session but there's no real link between the session and a user in Mongo. Need to store/retrieve users and games from Mongo before proceeding.
+
+Make HTML for join, open, create game, sign out form
 
 Implement action forms on client and action functions in Game
   funcs: raid, move/attack, defense, support, consolidate power, submit data (any form)
   client forms: action form for above actions, bidding form for tracks and wildlings, choice form for season cards.
   Submit turn action > tie into Game.playersReady
+
+
+Deck, card file read & import, card object setup
 
 Implement Card-related functions in Game.
   -fighting: swords and fortress
@@ -20,6 +24,12 @@ Implement client DOM updates and HTML updates using data from Game:
 Phase 2:
 Wildlings attacks and effects
 Ships in port
+
+Whole board:
+https://public.dm2301.livefilestore.com/y2piakcwisHvHeIN4SmjSvCQLQ_rE-6Tc3qRZdyfWT27EydMyQ1fMWMosvsrPi6XbEek1Tn-a6gExnzoFnfEk-_9W9OO34P-rioJGf4XbEjXtc/32.1.0.png?rdrts=90591333
+
+Game rules:
+https://images-cdn.fantasyflightgames.com/filer_public/30/4f/304f72e3-4fe4-4f91-bfbe-75133161b092/va65_agot2_rulebook_web.pdf
 
 House card list:
 https://www.scribd.com/document/151060549/House-Cards-Reference-Sheet

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Play Board Games Online</title>
+    <link rel="stylesheet" type="text/css" href="/style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    </head>
+<body>
+    <div id="gameboard">
+      <div class='userdataform'>
+        <div class="tab">
+            <button class="tablinks" id="defaultLoginTab" onclick="openTab(event, 'signUpForm')">Register</button>
+          </div>
+        <form id='signUpForm' class='tabcontent' method='post'>
+          <input class = "login" type="text" name="email" placeholder="E-mail" required="">
+					<input class = "login" type="text" name="username" placeholder="Username" required="">
+					<input class = "login" type="password" name="password" placeholder="Password" required="">
+					<input class = "login" type="password" name="passwordConf" placeholder="Confirm Password" required="">
+					<input type="submit" value="REGISTER">
+        </form>
+			</div>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+    <script type="text/javascript" src="/client.js"></script>
+</body>
+</html>

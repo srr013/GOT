@@ -1,6 +1,7 @@
 'use strict';
 let Deck = require('./Deck.js');
 
+
 class Player{
   constructor(game,user){
     this.user = user;
@@ -19,22 +20,38 @@ class Player{
 
   //Places the player's starting units
    initializePlayer(gameObj){
-    this.number = gameObj.players.findIndex(this);
-    this.house = (playernum == 0) ? 'Baratheon' : (playernum == 1) ? 'Lannister' : (playernum == 2) ? 'Stark' : 'None';
-    //this.attackDeck = new Deck('House-'+ this.house + '.txt')
+    this.number = 1;
+    this.house = (this.number == 0) ? 'Baratheon' : (this.number == 1) ? 'Lannister' : (this.number == 2) ? 'Stark' : 'None';
+    //this.attackDeck = new Deck('House-'+ this.house)
 
     //update game throne order to defaults
     //this.throneTrack = this.game.gameObj.gameVariables.throneTrack.findIndex(this);
     //this.ravenTrack = this.game.gameObj.gameVariables.ravenTrack.findIndex(this);
     //this.swordTrack = this.game.gameObj.gameVariables.swordTrack.findIndex(this);
     //add units and power tokens to the appropriate square objects based on house - need some sort of house-specific load file
-
+    let owned = {};
+    if (this.house == 'Lannister'){
+      owned = {ownedSquares:[['F5',{units:{footman:1,knight:1,siege:0,ship:0,token:1}}],['G5',{units:{footman:0,knight:0,siege:0,ship:1,token:0}}],['E5',{units:{footman:1,knight:0,siege:0,ship:0,token:0}}],['G6',{units:{footman:0,knight:0,siege:0,ship:1,token:0}}]]};//read this in from a file
+      this.ownedSquares = ['F5', 'E5', 'G5', 'G6'];
+    }
+    if (this.house == 'Baratheon'){
+      owned = {ownedSquares:[['A6',{units:{footman:1,knight:1,siege:0,ship:0,token:0}}],['B6',{units:{footman:0,knight:0,siege:0,ship:2,token:0}}],['C7',{units:{footman:1,knight:0,siege:0,ship:0,token:1}}]]};//read this in from a file
+      this.ownedSquares = ['A6', 'B6', 'C7'];
+    }
+    if (this.house == 'Stark'){
+      owned = {ownedSquares:[['E2',{units:{footman:2,knight:1,siege:0,ship:0,token:1}}],['E3',{units:{footman:1,knight:0,siege:0,ship:0,token:0}}],['C2',{units:{footman:1,knight:0,siege:0,ship:0,token:0}}],['B2',{units:{footman:0,knight:0,siege:0,ship:1,token:0}}],['D2',{units:{footman:0,knight:0,siege:0,ship:0,token:1}}]]};//read this in from a file
+      this.ownedSquares = ['E2', 'E3', 'C2', 'B2','D2'];
+    }
+    console.log(gameObj.players);
     //update ownedSquares
+    let GameFuncs = require('./GameFunctions.js');
+    GameFuncs.updateSquares(gameObj,owned);
     //update units on squares
     let list = [1,2,3] //update to reflect houses
-    updateTracks(gameObj,list);
-    updateSupply();
-    updateCastleCount();
+    //this.updateTracks(gameObj,list);
+    //this.updateSupply();
+    //this.updateCastleCount();
+    return this;
   }
 
   //
