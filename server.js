@@ -181,47 +181,47 @@ createGame = (gameid, userIndex) => {
   return game;
 }
 
-let shutdown = function(){
-  console.log("shutting down")
-  saveGames();
-  server.close()
-}
+// let shutdown = function(){
+//   console.log("shutting down")
+//   saveGames();
+//   server.close()
+// }
+//
+// let saveGames = function(){
+//   console.log("in saveGame", GAME_LIST);
+//   GAME_LIST.forEach((game) =>{
+//       fs.writeFile(savedGamesFilePath+game.gameId+'.txt', JSON.stringify(game), function(err) {
+//         if(err) {
+//             return console.log("error loading", err);
+//         }
+//       });
+//         console.log("File saved");
+//     });
+//   };
 
-let saveGames = function(){
-  console.log("in saveGame", GAME_LIST);
-  GAME_LIST.forEach((game) =>{
-      fs.writeFile(savedGamesFilePath+game.gameId+'.txt', JSON.stringify(game), function(err) {
-        if(err) {
-            return console.log("error loading", err);
-        }
-      });
-        console.log("File saved");
-    });
-  };
 
-
-//Run on server start to load saved games
-let start = function(){
-  fs.readdir(savedGamesFilePath, function( err, files ) {
-        if( err ) {
-            console.error( "Could not list the directory.", err );
-            process.exit( 1 );
-        } else{
-        files.forEach( function( file, index ) {
-          let name = file.replace('.txt','');
-          console.log(name);
-          fs.readFile(savedGamesFilePath+file, 'utf8', function (err,data) {
-              if (err) {
-                return console.log(err);
-              }
-              console.log(data);
-              GAME_LIST[name] = JSON.parse(data);
-            });
-        });
-      }
-    });
-  };
-start();
-
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+// //Run on server start to load saved games
+// let start = function(){
+//   fs.readdir(savedGamesFilePath, function( err, files ) {
+//         if( err ) {
+//             console.error( "Could not list the directory.", err );
+//             process.exit( 1 );
+//         } else{
+//         files.forEach( function( file, index ) {
+//           let name = file.replace('.txt','');
+//           console.log(name);
+//           fs.readFile(savedGamesFilePath+file, 'utf8', function (err,data) {
+//               if (err) {
+//                 return console.log(err);
+//               }
+//               console.log(data);
+//               GAME_LIST[name] = JSON.parse(data);
+//             });
+//         });
+//       }
+//     });
+//   };
+// start();
+//
+// process.on('SIGTERM', shutdown);
+// process.on('SIGINT', shutdown);
