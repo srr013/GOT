@@ -1,6 +1,6 @@
 To do:
 
-Can currently establish a session but there's no real link between the session and a user in Mongo. Need to store/retrieve users and games from Mongo before proceeding.
+Can currently establish a session but there's no real link between the session and a user in Mongo. Need to store/retrieve users and games from Mongo before proceeding. When user first logs in attach the session ID to the user then look up user whenever a request comes in with that ID.
 
 Make HTML for join, open, create game, sign out form
 
