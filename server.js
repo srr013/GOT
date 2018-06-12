@@ -11,7 +11,7 @@ let mongoose = require('mongoose');
 let session = require('express-session');
 let MongoStore = require('connect-mongo')(session);
 let routes = require('./router.js');
-var bcrypt = require('bcrypt');
+var bcrypt = require('bcrypt-nodejs');
 
 let Game = require('./server/Game.js');
 let GameObject = require('./server/GameObject.js');
