@@ -1,55 +1,75 @@
 const socket = io();
-let USER = {};
+let USERDATA = {};
 let STORE = sessionStorage;
 let GAME = '';
 let POPUP = '';
 let DATA_TO_SEND = [];
 
-
-//Navigation to game page
-socket.on('open game', (data) => {
-  let x = STORE.setItem("game",JSON.stringify(data));
-  window.location = "/games/"+data.gameObj.gameId+"#game"
-});
-
-
+//These run on load
 $(function () {
-  $.getJSON("api/user_data", function(data) {
-      console.log("Fetching user", data);
+  $.getJSON("/api/user_data", function(data) {
+    console.log("API data:",data);
       if (data.hasOwnProperty('userid')) {
-          USER = data;
+          USERDATA = data;
+          data.games.forEach((game) => {
+            console.log(game);
+            if (game != null){
+              $('#gamelist').append("<li><a href=/games/"+game+">"+game+"</li>");
+            }
+          });
       }else{
         $('.userdataform').css('display', 'block');
       }
-  });
-    if (USER.userid == ''){
-        window.location = "/";
-    }else{
-      if (document.URL.includes('#game')) {
-        GAME = JSON.parse(STORE.game);
-        console.log("loading game", GAME);
-        let i = 0;
-        let map = document.getElementById('gameboard');
-        while (i < GAME.gameObj.map.length){
-          let j = 0;
-          while (j < GAME.gameObj.map[i].length){
-            map.appendChild(createSquare(GAME.gameObj.map,i,j));
-            j++;
-          }
-        i++;
-        }
-      highlightOwnedSquares();
+  }).then(function(response){
+    if (USERDATA.userid == ''){
+        $('.userdataform').css('display', 'block');
+        $('.mainmenu').css('display', 'none');
       }
+    }, function(error){
+      return error;
+      }
+)})
+$(function(){
+  console.log(document.URL);
+  if (document.URL.includes('games')) {
+    $('.mainmenu').css('display', 'none');
+    if (!USERDATA.hasOwnProperty("gameid")){
+      let parser = document.createElement('a');
+      parser.href = document.URL;
+      let gameid = parser.pathname.replace(/\/games\//g,'');
+      gameid = gameid.replace(/\W/g,'');
+      USERDATA.gameid = gameid;
+      console.log(gameid,USERDATA)
     }
+      console.log('loading game', USERDATA.gameid, USERDATA.userid);
+      sendMessage('load game', String(USERDATA.gameid), String(USERDATA.userid));
+    }
+  });
+
+//Open game navigates to the game page
+socket.on('open game', (data) => {
+  window.location = "/games/"+data.gameObj.gameId
+});
+//Load game loads the map
+socket.on("load game", (game,map,players) => {
+  console.log(game,map, players);
+  let i = 1;
+  let gameboard = document.getElementById('gameboard');
+  for (index in map){
+      let s = 'column'+i
+      let j = 0;
+      if (s in map){
+        while (j < map[s].length){
+          gameboard.appendChild(createSquare(map,i,j));
+          j++;
+        }
+      }
+    i++;
+    }
+  highlightOwnedSquares(players);
 });
 
 
-
-socket.on('userIndex', (data)=>{
-  console.log("setting index from server", data)
-  STORE.setItem("userIndex", data);
-  USERDATA.index = data;
-})
 //Client receives square object update and logs it to GAME_BOARD, replacing previous object.
 socket.on('object update', (object) => {
     console.log("client update received", object);
@@ -91,34 +111,27 @@ function openTab(evt, tabName) {
     evt.currentTarget.className += " active";
 }
 
-//this takes over login form submission and sends a socket message with form data
-//window.addEventListener("load", function () {
-  // function sendUserData() {
-  //   USERDATA.displayname = form.elements['displayname'].value;
-  //   USERDATA.authcode = form.elements['authcode'].value;
-  //   let data = {displayname: USERDATA.displayname, authcode: USERDATA.authcode};
-  //   console.log("login form data", data);
-  //   socket.emit('login', data);
-  // }
-//   var form = document.getElementById("loginForm");
-//   form.addEventListener("submit", function (event) {
-//     event.preventDefault();
-//     form.style.display = 'none';
-//     sendUserData();
-//   });
-// });
+let logout = function(){
+  STORE.removeItem('gameid');
+  window.location = '/logout';
+}
 
-// function setUserData(){
-//   if (USERDATA.index > 0){
-//     document.getElementById("loginForm").style.display = 'none';
-//   } else if (STORE.getItem("userIndex") != null){
-//     console.log("retrieving index from store" ,STORE.getItem("userIndex"));
-//     USERDATA.index = STORE.getItem("userIndex");
-//     document.getElementById("loginForm").style.display = 'none';
-//   }
-// }
 
 ///////// GAMEPLAY /////////
+
+function newGame(){
+  if (USERDATA.userid == ''){
+    $.getJSON("api/user_data", function(data){
+        if (data.hasOwnProperty('userid')){
+            USERDATA = data;
+          }else{
+            console.log("error getting UserID");
+          }
+        });
+  }
+  console.log("sending new game message");
+  sendMessage('new game', USERDATA.userid);
+}
 
 function submitTurn(){
   sendMessage('submit turn', GAME);
@@ -148,7 +161,8 @@ function toggleMenu(x){
 
 function toggleGameList(){
   let gameList = document.getElementById("gamelist");
-  USERDATA.forEach((game) => {
+  let list =
+  list.forEach((game) => {
     let g = document.createElement('div');
     g.addEventListener('click', function(){
       sendMessage('load game',game.gameId);
@@ -220,7 +234,7 @@ function createSquare(data,i,j){
     //square.style.height = (.99/data.length)*100+'%';
     //square.style.width = (.97/data[i].length)*100+'%';
 
-    let squ = data[i][j];
+    let squ = data['column'+i][j];
     square.setAttribute("id", squ.id);
     squareID.textContent = squ.id;
     if (squ.terrain == 0){
@@ -317,14 +331,13 @@ function dragElement(elmnt) {
   }
 }
 
-function highlightOwnedSquares(){
+function highlightOwnedSquares(players){
   let color = '';
-  GAME.gameObj.players.forEach((player) =>{
-    (player.house == 'Lannister') ? color = 'rgba(180,0,0,.8)' :
-    (player.house == 'Boratheon') ? color = 'mustard' :
-    (player.house == 'Stark') ? color = 'grey' : color = 'green'
-
-    player.ownedSquares.forEach((square) =>{
+  players.forEach((player) =>{
+    (player.object.house == 'Lannister') ? color = 'rgba(180,0,0,.8)' :
+    (player.object.house == 'Boratheon') ? color = 'mustard' :
+    (player.object.house == 'Stark') ? color = 'grey' : color = 'green'
+    player.object.ownedSquares.forEach((square) =>{
       let bg = getSquareObjFromID(square);
       console.log(bg);
       if (bg.terrain == 1){
@@ -335,6 +348,23 @@ function highlightOwnedSquares(){
     });
   });
 }
+
+function toggleBottomBar(){
+  if ($('#bottombar').css("height") == '0px'){
+    $('#bottombar').css("height","25vh");
+    $('.bottom').css("display","");
+    $('#bottomgrabber').css("bottom","20vh");
+    $('#bottomgrabber').css("backgroundColor", "rgba(0,0,0,.2)");
+  }else{
+    $('#bottombar').css("height","0px");
+    $('.bottom').css("display","none");
+    $('#bottomgrabber').css("bottom","0vh");
+    $('#bottomgrabber').css("backgroundColor", "rgba(0,0,0,.4)");
+
+  }
+};
+
+
 
 ///////////////////HTML STRING BUILDERS///////////////
 function createSquarePopup(selectedSquare){

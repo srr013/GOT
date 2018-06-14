@@ -1,11 +1,12 @@
 let fs = require('fs');
 
-exports.loadMapFromFile = function (){
+exports.loadMapFromFile = function (gameid){
     let results = fs.readFileSync('server/Map.txt','utf-8');
     let columns = function (data){
         let squares = data.replace(/\s/g, '|');
 //squares 0|0|0|0|0|0|1|0|#|0|0|0|0|0|0|0|0|#|0|0|1,C|0|0|1|0|1|#|1|1|1|1|1|1,C|1,S|1|#|1|1,S|1|1|1|1,C|1|1|#|1|1|1|1,S|1|1|1|1,C|#|0|1|0|1|1,S|1,S|1|1|#|0|0|0|0|0|0|0|0|#|0|0|0|1,C|0|0|0|0|#|0|0|0|0|0|0|0|0|#|
         let columns = []
+        columns.push([gameid]);
         let i = 0;
         let c = 65;
         objectCounter = 0;

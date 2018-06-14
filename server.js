@@ -16,11 +16,15 @@ var bcrypt = require('bcrypt-nodejs');
 let Game = require('./server/Game.js');
 let GameObject = require('./server/GameObject.js');
 let GameFuncs = require('./server/GameFunctions.js');
+let GameMap = require('./server/Map.js');
 
 let savedGamesFilePath = __dirname+"/server/Games/"
 
 //connect to MongoDB
-const User = require('./models/User.js');
+const UserModel = require('./models/User.js');
+const GameModel = require('./models/Game.js');
+const MapModel = require('./models/MapModel.js')
+const PlayerModel = require('./models/PlayerModel.js');
 mongoose.connect('mongodb://localhost/testForAuth');
 var db = mongoose.connection;
 
@@ -48,48 +52,42 @@ app.use('/games/*', express.static('public'))
 
 let LocalStrategy = require('passport-local').Strategy;
 
-function validPassword(pw){
-  return true;
+function validPassword(pw, user,cb){
+  bcrypt.compare(pw, user.password, function (err, result) {
+    console.log("result", result);
+    if (result === true) {
+      return cb(null,user);
+    } else {
+      return cb();
+    }
+  });
 }
 passport.use(new LocalStrategy(
   function(username, password, done) {
-    User.findOne({ username: username }, function (err, user) {
-      console.log(user);
+    console.log("login deets", username, password)
+    let query = UserModel.where({email:username});
+    query.findOne(function (err, user) {
       if (err) { return done(err); }
+      console.log("passport", err, user);
       if (!user) {
-        return done(null, false, { message: 'Incorrect username.' });
+        return done(null, false);
       }
-      if (!validPassword(password)) {
-        return done(null, false, { message: 'Incorrect password.' });
+      if (!validPassword(password, user, done)) {
+        return done(null, user); // bypassing PW check for now
       }
       return done(null, user);
     });
   }
 ));
+//example User:
+// { _id: 5b1e8ce9b6ba66453161b7da,
+//   email: 'sfdkn@mkfln',
+//   username: 'srr013@bucknell.edu',
+//   password:
+//    '$2b$10$PoiVSn8NpTTZ4KqEwG7bueOrTOdWQ.ptudgJl1IWXKOwEqIWtEjmm',
+//   passwordConf: '1234',
+//   __v: 0 }
 
-// passport.use(new LocalStrategy(
-//   function(username, password, done) {
-//       User.findOne({
-//         username: username
-//       }, function(err, user) {
-//         if (err) {
-//           return done(err);
-//         }
-//
-//         if (!user) {
-//           return done(null, false);
-//         }
-//         console.log(password, user.password);
-//         bcrypt.compare(password,user.password).then(function (result){
-//           if(result == true){
-//             return done(null, user);
-//           }else{
-//             return done(null, false);
-//           }
-//         })
-//       });
-//   }
-// ));
 // used to serialize the user for the session
 passport.serializeUser(function(user, done) {
     done(null, user.id);
@@ -104,7 +102,6 @@ passport.deserializeUser(function(id, done) {
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-  console.log("req?", req);
   var err = new Error('File Not Found');
   err.status = 404;
   next(err);
@@ -119,8 +116,7 @@ let server = http.listen(process.env.PORT
   console.log('Server started');
 });
 
-let USER_LIST = [];
-let GAME_LIST = [];
+
 
 io.on('connection', function(socket){
   console.log('a user connected');
@@ -132,32 +128,62 @@ io.on('connection', function(socket){
       console.log("message sent")
       io.emit('chat message',msg);
   });
-    // socket.on('login', (req) => {
-      // let i = 0;
-      // while (i < USER_LIST){
-      //   if (USER_LIST[i].authcode == user.authcode){
-      //     io.emit('userIndex', i)
-      //     return
-      //   }
-      // }
-      // user.index = USER_LIST.length;
-      // USER_LIST.push(user);
-      // io.emit('userIndex', user.index);
-    //})
-    socket.on('new game', (userIndex) => {
+    socket.on('game list', (userid) =>{
+      let games = GameModel.findOne({userid:userid}, function(err, game){
+        console.log(game);
+        if (err) { return err; }
+        else {
+          return (null, game);
+        }
+      })
+    }
+
+  )
+    socket.on('new game', (user) => {
       let gameid = Math.round(Math.random()*100000000000);
-      let game = createGame(gameid, USER_LIST[userIndex]);
-      GAME_LIST[gameid] = game;
-      socket.emit('open game', game);
-      });
-  socket.on('load game', (gameid, userIndex) => {
-      console.log("loading game");
-      //Should check HTTP request for gameID and check the game list for that ID. If not there then load game from file, add to game list, and deliver the game object
-      let game = GAME_LIST[gameid];
-      var nsp = io.of('/Games/'+ game.gameid);//create namespace for this game
-      socket.emit('open game', game);
-  socket.on('join game', (gameid, USER_LIST[userIndex]))
+      let cb = function(newgame){
+        console.log("newgame",newgame);
+        socket.emit('open game', newgame);
+      };
+      createGame(gameid, user, cb);
     });
+
+  socket.on('load game', (gameid, userid) => {
+      console.log("loading game!", gameid, userid);
+      let query = GameModel.where({ _id: gameid });
+      query.findOne(function(err,game){
+        if (err) console.log(err);
+        if (game){
+        //  console.log("checking game", game);
+          let mapquery = MapModel.where({ _id:gameid});
+          mapquery.findOne(function(err,map){
+            if (err) console.log(err);
+            if (map){
+              //console.log("checking map", map);
+              let playerquery = PlayerModel.where({ user: {$in :game.players}}).where({gameid:game._id}); // This doesn't work. Should look at userid and compare the the player.user attaches to game.players
+              playerquery.find(function(err,players){
+                if (err) console.log(err);
+                if (players){
+                  players.forEach((player) => {
+                    //if player already in game
+                    console.log("Checking for existing player", game.players, player.user);
+                    if (game.players.indexOf(player.user[0]) >= 0){
+                      socket.emit('chat message', player.user.username + " has entered the room")
+                    } else{
+                      console.log("adding player");
+                      GameFuncs.addPlayer(player.user, game, game.gameObj, game.players);
+                    }
+                  });
+                  console.log("sending game");
+                  var nsp = io.of('/games/'+ game.gameid);//create namespace for this game
+                  socket.emit('load game', game, map, players);
+                }
+              })
+          }
+        })
+      }
+    })
+  });
         //This could be problematic because it takes the object data from the client instead of calculating it itself. Should likely just get the object ID and changes from the client and maintain the squares on the server.
     socket.on('object update', (object) => {
         console.log("server object update", object);
@@ -168,18 +194,53 @@ io.on('connection', function(socket){
     socket.on('submit turn', (object) => {
       //let game = GAME_LIST[object.gameObj.gameId];
       if (object.gameObj.gameVariables.phase == 'start'){
-        let game = GameFuncs.stepThrough(object);
-        socket.emit('object update', game);
+        let gameObj = GameFuncs.stepThrough(object);
+        socket.emit('object update', gameObj);
       }
     });
 });
 
-createGame = (gameid, userIndex) => {
-  let gameObj = new GameObject(gameid); //game variables and data
-  let game = new Game(gameObj,3,10); //gameplay and turn progression
-  GameFuncs.addPlayer(USER_LIST[userIndex], game);
-  return game;
-}
+function createGame(gameid, user, cb){
+  GameModel.findById(gameid, function(err,game){
+    if (!game){
+      console.log("creating game");
+      let gameObj = new GameObject(gameid); //game variables and data
+      let game = new Game(gameid,3,10); //gameplay and turn progression
+      let map = GameMap.loadMapFromFile();
+      let players = []
+      GameFuncs.addPlayer(user, game, gameObj, players);
+
+      gameModel = new GameModel({
+        _id: gameid,
+        gameRounds: game,
+        gameObj:gameObj,
+        players:[user]
+      });
+      let mapData = {};
+      (function(){
+        let i = 0;
+        while (i < map.length){
+          mapData['column'+i] = map[i];
+          i++;
+          }
+        })();
+      let mapModel = new MapModel(mapData);
+      mapModel._id = gameModel._id;
+      mapModel.save(function(err){
+        if(err) console.log("error from MapModel",err);
+      });
+      gameModel.gameMap = mapModel;
+      gameModel.save(function(err, game){
+        if (err) console.log("error from gameModel",err);
+        cb(game);
+      });
+    }else{
+      gameid++;
+      createGame(gameid, user);
+    };
+  });
+};
+
 
 // let shutdown = function(){
 //   console.log("shutting down")

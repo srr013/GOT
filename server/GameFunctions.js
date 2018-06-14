@@ -5,7 +5,7 @@ let Player = require('./Player.js');
 
 //Runs the first function it finds that is false at [1]
 exports.stepThrough = function(game){
-  let round = game.game[game.gameObj.gameVariables.turnNum-1];
+  let round = game.game;//Need to figure out how to dupe each round into game when a round is complete.
   let i = 0;
   while (round[i][1] == true){
     i++;
@@ -23,22 +23,34 @@ exports.stepThrough = function(game){
   return newresult;
 }
 
-exports.addPlayer = function(user, game){
-  if (game.gameObj.players.length < game.numPlayers){
-    game.gameObj.updatePlayerList(new Player(game, user));
-  };
-  if (game.gameObj.players.length == 1){
-    game.gameObj.players = Utilities.shuffle(game.gameObj.players);
-    game.gameObj.players.forEach((player) => {
-      player.initializePlayer(game.gameObj);
-    });
-    return true, game;
+exports.addPlayer = function(user, game, gameObj, players){
+  if (players.length < game.numPlayers){
+    if (gameObj.phase == 'start'){
+      new Player(game, user, cb, players);
   }
-return false;
+};
+
+function cb(players, player, game){
+  players.push(player);
+  if (players.length == game.gameObj.numPlayers){
+    players = Utilities.shuffle(players);
+    players.forEach((player) => {
+      player.initializePlayer(gamej);
+      });
+    return true, game;
+  }else{
+    return false
+    }
+  }
 }
-exports.updateSquares = function(gameObj, updates){
+exports.getHouses = function(game){
+  game.gameObj.houses = ['Lannister', 'Boratheon', '']
+}
+
+exports.updateSquares = function(gameid, updates){
+  let gamemap = [];
   updates.ownedSquares.forEach((square)=>{
-    gameObj.map.forEach((x) => {
+    gamemap.forEach((x) => {
       x.forEach((y) =>{
         if (y.id == square[0]){
           if (square[1].units){

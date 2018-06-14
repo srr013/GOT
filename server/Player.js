@@ -1,14 +1,15 @@
 'use strict';
 let Deck = require('./Deck.js');
+let PlayerModel = require('../models/PlayerModel.js');
+let GameFuncs = require('./GameFunctions.js');
 
 
 class Player{
-  constructor(game,user){
-    this.user = user;
-    this.game = game.id;
-    this.number = 0;
+  constructor(game,user, cb, players){
+    this.id = game.id;
+    this.house = ''
     this.ready = false;
-    this.ownedSquares = [] //list of square objects that are under the player's control (have a unit or power token on them)
+    this.ownedSquares = [];
     this.orders = [];
     this.supply = 0;
     this.powerTokens = 5;
@@ -16,12 +17,26 @@ class Player{
     this.strongholdCount = 0;
     this.totalCastles = 0;
     this.actionQueue = [];
+    let player = this;
+    let p = new PlayerModel({
+      user: user,
+      object: this,
+      gameid: this.id,
+      });
+    p.save(function(err, p){
+      if (err) console.log("error from playerModel",err);
+      cb(players, player, game);
+      });
   }
 
   //Places the player's starting units
-   initializePlayer(gameObj){
-    this.number = 1;
-    this.house = (this.number == 0) ? 'Baratheon' : (this.number == 1) ? 'Lannister' : (this.number == 2) ? 'Stark' : 'None';
+   initializePlayer(game){
+     if (game.gameObj.houses.length == 0){
+       GameFuncs.getHouses()
+     }
+    let number = (Math.round((Math.random()*100)) * game.gameObj.houses.length)/100 - 1;
+    console.log("player number", number);
+    this.house = game.gameObj.houses.splice(number, 1);
     //this.attackDeck = new Deck('House-'+ this.house)
 
     //update game throne order to defaults
@@ -42,10 +57,8 @@ class Player{
       owned = {ownedSquares:[['E2',{units:{footman:2,knight:1,siege:0,ship:0,token:1}}],['E3',{units:{footman:1,knight:0,siege:0,ship:0,token:0}}],['C2',{units:{footman:1,knight:0,siege:0,ship:0,token:0}}],['B2',{units:{footman:0,knight:0,siege:0,ship:1,token:0}}],['D2',{units:{footman:0,knight:0,siege:0,ship:0,token:1}}]]};//read this in from a file
       this.ownedSquares = ['E2', 'E3', 'C2', 'B2','D2'];
     }
-    console.log(gameObj.players);
     //update ownedSquares
-    let GameFuncs = require('./GameFunctions.js');
-    GameFuncs.updateSquares(gameObj,owned);
+    GameFuncs.updateSquares(this.id,owned);
     //update units on squares
     let list = [1,2,3] //update to reflect houses
     //this.updateTracks(gameObj,list);
@@ -56,9 +69,9 @@ class Player{
 
   //
    updateTracks(gameObj,list){
-    gameObj.gameVariables.throneTrack.findIndex(this.number);
-    gameObj.gameVariables.ravenTrack.findIndex(this.number);
-    gameObj.gameVariables.swordTrack.findIndex(this.number);
+    gameObj.throneTrack.findIndex(this.number);
+    gameObj.ravenTrack.findIndex(this.number);
+    gameObj.swordTrack.findIndex(this.number);
   }
 
    updateSupply(){

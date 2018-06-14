@@ -1,25 +1,22 @@
 'use strict';
-let Map = require('./Map.js');
 let Utilities = require('./Utilities.js')
 
 class GameObject{
   constructor(gameid){
     this.gameId = gameid;
-    this.players = [];
-    this.map = Map.loadMapFromFile();
-    this.gameVariables = {phase:'start',
-    throneTrack:[],
-    ravenTrack:[],
-    swordTrack:[],
-    turnNum:1,
-    wildlingPower:0,
-    attackList:[],
-    orderList:[],
-    conditionalActionList:[]
-    };
+    this.phase ='start',
+    this.throneTrack =[],
+    this.ravenTrack =[],
+    this.swordTrack = [],
+    this.turnNum = 1,
+    this.wildlingPower = 0,
+    this.attackList = [],
+    this.orderList = [],
+    this.houses = [],
+    this.conditionalActionList = []
   };
-   updatePlayerList(player){
-    if (this.gameVariables.phase == 'start'){
+   updatePlayerList(players, player){
+    if (this.phase == 'start'){
       this.players.push(player);
       return true;
     }
@@ -29,15 +26,15 @@ class GameObject{
   }
 
   //takes in a list of [index,key,value] pairs and updates the map
-   updateMap(list){
+   updateMap(list, gamemap){
     list.forEach((update) => {
-      this.map[update[0]][update[1]] = update[2];
+      gamemap[update[0]][update[1]] = update[2];
     });
   }
 
    updateGameVariables(list){
     list.forEach((update) => {
-      this.gameVariables[update[0]] = [update[1]];
+      this[update[0]] = [update[1]];
     });
   }
 }

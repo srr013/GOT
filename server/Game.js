@@ -17,19 +17,16 @@ let Player = require('./Player.js');
 // console.log(it.next().value); // 'yo'
 
 class Game{
-  constructor(gameObj,numPlayers, numRounds){
+  constructor(gameid, numPlayers, numRounds){
+    this.id = gameid;
     let startRound = [['conditionalActions',false],['enableOrderSelection',false]]
     let actionRound = [['playersReady',false], ['resetPlayerStatus',false]]
     let attackRound = [['sortOrders',false], ['completeOrders',false], ['playersReady',false],['resetPlayerStatus',false]]
     let endRound = [['seasonCards', false], ['conditionalActions',false], ['playersReady',false], ['resetPlayerStatus',false], ['endTurn',false]]
-     let round = [...startRound,...actionRound,...attackRound,...endRound];
-    this.game = [];
-    let i = 0;
-    while (i < numRounds){
-      this.game.push(round);
-      i++;
-    }
-    this.gameObj = gameObj;
+    this.round = [...startRound,...actionRound,...attackRound,...endRound];
+    this.game = Array.from(this.round);
+    this.numRounds = numRounds;
+    this.currentRound = 1;
     this.numPlayers = numPlayers;
     // this.seasonOne = Utilities.shuffle(new Deck('SeasonOne'));
     // this.seasonTwo = Utilities.shuffle(new Deck('SeasonTwo'));

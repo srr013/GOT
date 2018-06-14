@@ -10,7 +10,6 @@ var UserSchema = new mongoose.Schema({
   },
   username: {
     type: String,
-    unique: true,
     required: true,
     trim: true
   },
@@ -18,10 +17,6 @@ var UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  passwordConf: {
-    type: String,
-    required: true,
-  }
 });
 
 //authenticate input against database
@@ -49,7 +44,7 @@ UserSchema.statics.authenticate = function (email, password, callback) {
 //should really hash on the client
 UserSchema.pre('save', function (next) {
   var user = this;
-  bcrypt.hash(user.password, 10, function (err, hash) {
+  bcrypt.hash(user.password, bcrypt.genSaltSync(10), null, function (err, hash) {
     if (err) {
       return next(err);
     }
@@ -59,5 +54,5 @@ UserSchema.pre('save', function (next) {
 });
 
 
-var User = mongoose.model('User', UserSchema);
+var User = mongoose.model('User', UserSchema, 'User');
 module.exports = User;

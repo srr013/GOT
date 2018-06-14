@@ -13,9 +13,8 @@
               <a class="toggle" href='/'>123456</a>
               <div class='toggle' id='createGame' onclick="sendMessage('new game')">Create Game</div>
               <div class='toggle' id='joinGame'>Join Game</div>
-              <div class='toggle' id='openGame' onclick= "toggleGameList()">Open Game
-              </div>
-              <div id=gamelist></div>
+              <div class='toggle' id='openGame' onclick= "toggleGameList()">Open Game</div>
+              <div class='toggle' id='logout' onclick="logout()">Log Out</div>
           </div>
         </div>
         <div class="inline middle third">Tracks</div>
@@ -25,7 +24,7 @@
       <div class='userdataform'>
         <div class="tab">
             <button class="tablinks" id="defaultLoginTab" onclick="openTab(event, 'loginForm')">LogIn</button>
-            <button class="tablinks" onclick="window.location.href='/register.html'">Register</button>
+            <button class="tablinks" onclick="window.location.href='/register'">Register</button>
           </div>
         <form id='signUpForm' class='tabcontent' method='post'>
           <input class = "login" type="text" name="email" placeholder="E-mail" required="">
@@ -41,7 +40,7 @@
 				</form>
 			</div>
       <div class='mainmenu'>
-        <button class='menubutton' onclick="sendMessage('new game')">New Game</button>
+        <button class='menubutton' onclick="newGame()">New Game</button>
         <button class='menubutton' onclick=''>Join Game</button>
         <div id='currentgames'>
           <ul id='gamelist'></ul>
@@ -49,6 +48,7 @@
       </div>
     </div>
     <div id="bottombar">
+      <div id="bottomgrabber" onclick="toggleBottomBar()"></div>
         <div id = "actionbox" class="bottom inline left third">
           <div id='validation'></div>
           <button id='submitturn' onclick="submitTurn()">Submit Turn </button>
