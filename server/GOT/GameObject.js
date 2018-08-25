@@ -1,5 +1,5 @@
 'use strict';
-let Utilities = require('./Utilities.js')
+let Utilities = require('../Utilities.js')
 
 class GameObject{
   constructor(gameid){
@@ -12,7 +12,7 @@ class GameObject{
     this.wildlingPower = 0,
     this.attackList = [],
     this.orderList = [],
-    this.houses = [],
+    this.houses = ['Lannister','Baratheon'],
     this.conditionalActionList = []
   };
    updatePlayerList(players, player){

@@ -16,5 +16,6 @@ exports.shuffle = function(array) {
     array[currentIndex] = array[randomIndex];
     array[randomIndex] = temporaryValue;
   }
+  console.log("shuffle", array)
   return array;
 }

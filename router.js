@@ -20,7 +20,7 @@ router.get('/api/user_data', function(req, res) {
     } else {
       let query = PlayerModel.where({ user: req.session.passport.user });
       query.find(function(err,players){
-        console.log("fetching user's game data", err,players);
+        //console.log("fetching user's game data", players);
         if (err) console.log(err);
         if (players){
           let list = [];

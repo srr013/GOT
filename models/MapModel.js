@@ -4,43 +4,43 @@ var MapSchema = new mongoose.Schema({
   _id: {
     type: String,
   },
-  column1: {
+  columnA: {
     type: Array,
     unique: false,
   },
-  column2: {
+  columnB: {
     type: Array,
     unique: false,
   },
-  column3: {
+  columnC: {
     type: Array,
     unique: false,
   },
-  column4: {
+  columnD: {
     type: Array,
     unique: false,
   },
-  column5: {
+  columnE: {
     type: Array,
     unique: false,
   },
-  column6: {
+  columnF: {
     type: Array,
     unique: false,
   },
-  column7: {
+  columnG: {
     type: Array,
     unique: false,
   },
-  column8: {
+  columnH: {
     type: Array,
     unique: false,
   },
-  column9: {
+  columnI: {
     type: Array,
     unique: false,
   },
-  column10: {
+  columnJ: {
     type: Array,
     unique: false,
   },

@@ -6,7 +6,7 @@ var PlayerSchema = new mongoose.Schema({
     required: false
   },
   user: {
-    type: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]
+    type: mongoose.Schema.Types.ObjectId, ref: 'User'
   },
   gameid: {
     type: String,

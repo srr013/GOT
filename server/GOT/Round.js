@@ -1,6 +1,6 @@
 'use strict';
-let Utilities = require('./Utilities.js');
-let Deck = require('./Deck.js');
+let Utilities = require('../Utilities.js');
+let Deck = require('../Deck.js');
 let Player = require('./Player.js');
 
 // function makeIterator(array) {

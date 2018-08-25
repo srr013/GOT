@@ -44,8 +44,8 @@ html {
 .userdataform{
   display: none;
   position: absolute;
-  left: 25vw;
-  top: 25vh;
+  left: 30vw;
+  top: 30vh;
 }
 
 .login{
@@ -84,6 +84,10 @@ html {
   display: block;
   width: 40%;
   height: 20%;
+}
+
+.gameIDEntry{
+  display: none;
 }
 
 .square{
@@ -138,6 +142,7 @@ html {
     margin: 1rem 0;
     background-color: white;
 }
+
 #flexform {
     position: absolute;
     height: 100%;
@@ -147,9 +152,10 @@ html {
     background-color: rgba(0,0,0,.2);
 }
 #validation{
-  width:100%;
+  width:95%;
   height:80%;
   color: black;
+  word-wrap: break-word;
 }
 
 #submitturn{
@@ -295,4 +301,14 @@ form button { width: 19.5%; background: rgb(130, 224, 255); border: none; paddin
 @keyframes fadeIn {
     from {opacity: 0;}
     to {opacity:1 ;}
+}
+
+#clientdatawindow {
+    position: fixed;
+    display: block;
+    right:1vw;
+    top: 20vh;
+    width:15vw;
+    height: 50vh;
+    background-color: rgba(0,0,0,.2);
 }

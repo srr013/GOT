@@ -11,8 +11,9 @@
         <div class="inline left third">
           <div class="vertical-menu" onclick="toggleMenu(this)">Home
               <a class="toggle" href='/'>123456</a>
-              <div class='toggle' id='createGame' onclick="sendMessage('new game')">Create Game</div>
-              <div class='toggle' id='joinGame'>Join Game</div>
+              <div class='toggle' id='createGame' onclick=newGame()>Create Game</div>
+              <div class='toggle' id='joinGame' onclick=
+              "toggleGameIDEntry()" >Join Game</div>
               <div class='toggle' id='openGame' onclick= "toggleGameList()">Open Game</div>
               <div class='toggle' id='logout' onclick="logout()">Log Out</div>
           </div>
@@ -41,7 +42,9 @@
 			</div>
       <div class='mainmenu'>
         <button class='menubutton' onclick="newGame()">New Game</button>
-        <button class='menubutton' onclick=''>Join Game</button>
+        <button class='menubutton' onclick='toggleGameIDEntry()'>Join Game</button>
+        <input type='number' class='gameIDEntry' id='gameIDtoLoad'>
+        <button class ='gameIDEntry' onclick="joinGame()">Enter</button>
         <div id='currentgames'>
           <ul id='gamelist'></ul>
         </div>
@@ -50,7 +53,9 @@
     <div id="bottombar">
       <div id="bottomgrabber" onclick="toggleBottomBar()"></div>
         <div id = "actionbox" class="bottom inline left third">
-          <div id='validation'></div>
+          <div id='validation'>
+            <p id='validationtext'></p>
+          </div>
           <button id='submitturn' onclick="submitTurn()">Submit Turn </button>
         </div>
         <div id = "log" class="bottom inline middle third">
@@ -67,6 +72,11 @@
           <div class = 'inline card' id="card5">Card</div>
           <div class = 'inline card' id="card6">Card</div>
         </div>
+    </div>
+    <div id="clientdatawindow">
+      <div id="clientdatatext">
+        <p></p>
+      </div>
     </div>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
     <script type="text/javascript" src="/client.js"></script>

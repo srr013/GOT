@@ -18,7 +18,7 @@ var GameSchema = new mongoose.Schema({
     ref: 'MapModel',
   },
   players: {
-    type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Player'}]
+    type: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]
   }
 });
 

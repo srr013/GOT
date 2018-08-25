@@ -1,67 +1,13 @@
 'use strict';
-let Utilities = require('./Utilities.js');
-let Deck = require('./Deck.js');
+let Utilities = require('../Utilities.js');
+let Deck = require('../Deck.js');
 let Player = require('./Player.js');
 
-//Runs the first function it finds that is false at [1]
-exports.stepThrough = function(game){
-  let round = game.game;//Need to figure out how to dupe each round into game when a round is complete.
-  let i = 0;
-  while (round[i][1] == true){
-    i++;
-  }
-  let result = eval(round[i][0]+'(game)');
-  let newresult = ''
-  console.log(result);
-  if (result[0]){
-    round[i][1] = true;
-    ++i;
-    newresult = this.stepThrough(result[1])[1];
-  }else{
-    return result;
-  }
-  return newresult;
-}
+let PlayerModel = require('../../models/PlayerModel.js');
 
-exports.addPlayer = function(user, game, gameObj, players){
-  if (players.length < game.numPlayers){
-    if (gameObj.phase == 'start'){
-      new Player(game, user, cb, players);
-  }
-};
-
-function cb(players, player, game){
-  players.push(player);
-  if (players.length == game.gameObj.numPlayers){
-    players = Utilities.shuffle(players);
-    players.forEach((player) => {
-      player.initializePlayer(gamej);
-      });
-    return true, game;
-  }else{
-    return false
-    }
-  }
-}
 exports.getHouses = function(game){
-  game.gameObj.houses = ['Lannister', 'Boratheon', '']
-}
-
-exports.updateSquares = function(gameid, updates){
-  let gamemap = [];
-  updates.ownedSquares.forEach((square)=>{
-    gamemap.forEach((x) => {
-      x.forEach((y) =>{
-        if (y.id == square[0]){
-          if (square[1].units){
-            y.units = square[1].units;
-          }
-        }
-      })
-    })
-
-  })
-
+  console.log("in getHouses", game) //not in use currently
+  game.gameObj.houses = ['Lannister', 'Baratheon', 'Stark']
 }
 
 function enableOrderSelection(game){
@@ -74,15 +20,7 @@ function enableOrderSelection(game){
   }
   return [false, game];
 }
- function playersReady(game){ //Need a function on server that updates the gameobj.players.orders with player's moves when they emit a 'orders complete' status. This orders list should be sorted first to last: raid orders = 1,2,3, move orders = 4,5,6, consolidate power = 7,8,9. Ideally with gaps.
-  let ready = true;
-  game.gameObj.players.forEach((player) => {
-    if(player.ready == false){
-      ready = false;
-    }
-  return ready;
-  });
-}
+
 function resetPlayerStatus(game){
   //This should check the phase and mark players not ready or ready depending on if they need to do anything.
   if (game.gameObj.phase == 'endRound'){
@@ -111,7 +49,7 @@ function sortOrders(game){
   let playerMoves = [];
   //not set up for different playerNums
   let i = 0
-  while (i < game.playerNums){
+  while (i < game.playerNum){
     playerMoves.push(game.gameObj.throneTrack[i].Orders);
     i++;
   }
@@ -137,7 +75,9 @@ function completeOrders(game){
   let list = game.gameObj.gameVariables.orderList;
   while (list.length > 0){
     let order = list.shift();
-    order.action(); //Need to add order actions
+    if (order = 'Move'){
+      //function call
+    }//etc.
   }
   return true;
 }
@@ -228,4 +168,58 @@ function checkEndGame(game){
       return winList[0];
       }
   }
+}
+
+//Places the player's starting units
+ exports.initializePlayer = function (player, gameObj){
+  player.object.house = gameObj.houses.splice(0, 1);
+  //player.attackDeck = new Deck('House-'+ player.house)
+
+  //update game throne order to defaults
+  //player.throneTrack = player.game.gameObj.gameVariables.throneTrack.findIndex(player);
+  //player.ravenTrack = player.game.gameObj.gameVariables.ravenTrack.findIndex(player);
+  //player.swordTrack = player.game.gameObj.gameVariables.swordTrack.findIndex(player);
+  //add units and power tokens to the appropriate square objects based on house - need some sort of house-specific load file
+  let owned = {};
+  if (player.object.house == 'Lannister'){
+    player.object.units.Footman = ['F5', 'E5'];
+    player.object.units.Knight = ['F5'];
+    player.object.units.Siege = [];
+    player.object.units.Ship = ['G5', 'G6'];
+    player.object.units.Token = ['F5']
+    player.object.ownedSquares = ['F5', 'E5', 'G5', 'G6'];
+  }
+  if (player.object.house == 'Baratheon'){
+    player.object.units.Footman = ['A6', 'C7'];
+    player.object.units.Knight = ['A6'];
+    player.object.units.Siege = [];
+    player.object.units.Ship = ['B6', 'B6'];
+    player.object.units.Token = ['C7']
+    player.object.ownedSquares = ['A6', 'B6', 'C7'];
+  }
+  if (player.object.house == 'Stark'){
+    player.object.units.Footman = ['E2', 'E2', 'E3','C2'];
+    player.object.units.Knight = ['E2'];
+    player.object.units.Siege = [];
+    player.object.units.Ship = ['B2'];
+    player.object.units.Token = ['E2', 'D2']
+    player.object.ownedSquares = ['E2', 'E3', 'C2', 'B2','D2'];
+  }
+
+  //let list = [1,2,3] //update to reflect houses
+  //player.updateTracks(gameObj,list);
+  //player.updateSupply();
+  //player.updateCastleCount();
+  PlayerModel.findOneAndUpdate(
+    {_id:player.id},
+    {object:player.object},
+    function(error,success) {
+      if (error){
+        console.log("error", error);
+      }else{
+        console.log("success saving Player", success);
+      }
+    }
+  )
+  return player;
 }

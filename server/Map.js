@@ -1,12 +1,11 @@
 let fs = require('fs');
 
-exports.loadMapFromFile = function (gameid){
-    let results = fs.readFileSync('server/Map.txt','utf-8');
+exports.loadMapFromFile = function (){
+    let results = fs.readFileSync('server/GOT/Map.txt','utf-8');
     let columns = function (data){
         let squares = data.replace(/\s/g, '|');
 //squares 0|0|0|0|0|0|1|0|#|0|0|0|0|0|0|0|0|#|0|0|1,C|0|0|1|0|1|#|1|1|1|1|1|1,C|1,S|1|#|1|1,S|1|1|1|1,C|1|1|#|1|1|1|1,S|1|1|1|1,C|#|0|1|0|1|1,S|1,S|1|1|#|0|0|0|0|0|0|0|0|#|0|0|0|1,C|0|0|0|0|#|0|0|0|0|0|0|0|0|#|
         let columns = []
-        columns.push([gameid]);
         let i = 0;
         let c = 65;
         objectCounter = 0;
@@ -46,7 +45,6 @@ class Square{
     this.terrain = '';
     this.castle = '';
     this.bonus = '';
-    this.units = {footman:0, knight:0, seige:0, ship:0, token:0};
     let commacounter = 0;
     let i = 0;
     while (i < data.length){

@@ -1,22 +1,5 @@
 To do:
-Move database interaction to a separate module
-Fix server.js - socket.on loadgame so that additional users can join a game by navigating to it
-
-Implement action forms on client and action functions in Game
-  funcs: raid, move/attack, defense, support, consolidate power, submit data (any form)
-  client forms: action form for above actions, bidding form for tracks and wildlings, choice form for season cards.
-  Submit turn action > tie into Game.playersReady
-
-
-Deck, card file read & import, card object setup
-
-Implement Card-related functions in Game.
-  -fighting: swords and fortress
-
-Implement client DOM updates and HTML updates using data from Game:
-  activity log (main source of game info)
-  square display and updating
-    display: Castle/Stronghold, square ID, selected move, number and type of units + defense + support
+-Cant chain moves together (move unit twice in same turn)
 
 
 Phase 2:
@@ -37,3 +20,22 @@ file:///home/srr013/Downloads/Manifest_of_Wildlings_Cards.pdf
 
 Seasons:
 https://cf.geekdo-images.com/images/pic2428329.png
+
+old notes:
+client.js code is a mess. Move to HTML/CSS templates? Separate login, new/join game, and actual game pages into separate HTML.
+
+Implement action forms on client and action functions in Game
+  funcs: raid, move/attack, defense, support, consolidate power, submit data (any form)
+  client forms: action form for above actions, bidding form for tracks and wildlings, choice form for season cards.
+  Submit turn action > tie into Game.playersReady
+
+
+Deck, card file read & import, card object setup
+
+Implement Card-related functions in Game.
+  -fighting: swords and fortress
+
+Implement client DOM updates and HTML updates using data from Game:
+  activity log (main source of game info)
+  square display and updating
+    display: Castle/Stronghold, square ID, selected move, number and type of units + defense + support
