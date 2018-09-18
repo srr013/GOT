@@ -4,8 +4,8 @@ let PlayerModel = require('../../models/PlayerModel.js');
 
 
 module.exports = class Player{
-  constructor(gameRounds, user, cb, players, gameObj){
-    this.id = gameRounds.id;
+  constructor(game, user){
+    this.gameid = game.gameRounds.id;
     this.house = ''
     this.ready = false;
     this.ownedSquares = [];
@@ -23,17 +23,15 @@ module.exports = class Player{
     this.strongholdCount = 0;
     this.totalCastles = 0;
     this.actionQueue = [];
-    let player = this;
+
     let p = new PlayerModel({
       user: user,
       object: this,
-      gameid: gameRounds.id,
+      gameid: game.gameRounds.id,
       });
-    p.save(function(err, p){
-      if (err) console.log("error from playerModel",err);
-      cb(players, player, gameRounds, gameObj, user);
-      });
-      return this;
+    //game.players.push(p);
+
+    return [p, {playerid:p._id, userid:user}];
   }
 
   //

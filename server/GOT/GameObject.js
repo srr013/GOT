@@ -2,7 +2,7 @@
 let Utilities = require('../Utilities.js')
 
 class GameObject{
-  constructor(gameid){
+  constructor(gameid, numplayers){
     this.gameId = gameid;
     this.phase ='start',
     this.throneTrack =[],
@@ -23,19 +23,6 @@ class GameObject{
     else{
       return false;
     }
-  }
-
-  //takes in a list of [index,key,value] pairs and updates the map
-   updateMap(list, gamemap){
-    list.forEach((update) => {
-      gamemap[update[0]][update[1]] = update[2];
-    });
-  }
-
-   updateGameVariables(list){
-    list.forEach((update) => {
-      this[update[0]] = [update[1]];
-    });
   }
 }
 module.exports = GameObject;

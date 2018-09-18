@@ -161,7 +161,7 @@ function openGame(gameID){
         reject('Failure');
       }
     }).then((res) => {
-      console.log("data to client", res);
+      //console.log("data to client", res);
       socket.emit('open game', res);
     }).catch((error) => {
       console.log("Error", error);
@@ -180,13 +180,31 @@ function openGame(gameID){
     })
     .then((result) => {
       console.log("Adding Player", result);
-      if (result.players.indexOf(USERDATA.userid) == -1){
-        StandardFuncs.addPlayer(USERDATA.userid, result.gameRounds,result.gameObj,result.players)
-        //openGame()
+      if (result.players.indexOf(USERDATA.userid) == -1 && result.players.length < result.gameRounds.numPlayers){
+        player = StandardFuncs.addPlayer(USERDATA.userid, result)
+
+        player[0].save(function(err, document, success){
+          if (err) console.log("error from playerModel",err);
+          //if (p) cb(game);
+          else {
+            console.log("saved Player", success)
+            result.players.push(player[1]);
+            GameModel.update({_id:gameID},
+              {players: result.players},
+              function(error,success) {
+                if (error){
+                  console.log("error", error);
+                }else{
+                  console.log("success saving", success);
+                }}
+              ).then(StandardFuncs.startGame(result))
+            }
+        })
       }else{
         console.log("user already in game")
         //redirect to the game
       }
+
     })
     .catch((error) => {
       console.log("Error", error);
@@ -200,7 +218,6 @@ function openGame(gameID){
           reject('Failure');
         }
       }).then((res) => {
-        console.log("data to client", res);
         socket.emit('open game', res);
       }).catch((error) => {
         console.log("Error", error);
@@ -209,36 +226,12 @@ function openGame(gameID){
   });
 
   socket.on('load game', (USERDATA) => {
-      let playerData = [];
       //console.log("loading game!", USERDATA.gameid, USERDATA.userid);
-      let game = new Promise(function(resolve, reject){
-        let result = GameModel.findOne({_id:USERDATA.gameid}).exec();
-        if(result){
-          resolve(result);
-        }else{
-          reject('Failure');
-        }
-      });
-      let players = new Promise(function(resolve, reject){
-        let result = PlayerModel.find({gameid:USERDATA.gameid}).exec();
-        if(result){
-          resolve(result);
-        }else{
-          reject('Failure');
-        }
-      });
-      let map = new Promise(function(resolve, reject){
-        let result = MapModel.findOne({_id:USERDATA.gameid}).exec();
-        if(result){
-          resolve(result);
-        }else{
-          reject('Failure');
-        }
-      });
-      Promise.all([game,players,map])
+      //returns [game,players,map]
+      let data = StandardFuncs.getAllData(USERDATA.gameid)
       .then(function(results){
         console.log("full game data :)", results);
-        var nsp = io.of('/games/'+ game.gameid);//create namespace for this game
+        var nsp = io.of('/games/'+ results[0].gameid);//create namespace for this game
         socket.emit('load game', results);
       }).catch(function(err){
         console.log(error);
@@ -253,18 +246,25 @@ function openGame(gameID){
         console.log(GAME_LIST);
     });
     socket.on('submit turn', (object) => {
-      console.log("turn submitted", object);
-      //let game = GAME_LIST[object.gameObj.gameId];
-      //Store the object to the DB/rectify the changes w/ DB
-
-
-
-
-      if (object.gameObj.gameVariables.phase == 'start'){
-        let gameObj = GameFuncs.stepThrough(object);
-        socket.emit('object update', gameObj);
-      }
+      console.log("turn submitted", object)
+      PlayerModel.update(
+        {_id:object._id},
+        {object: object.object},
+        function(error,success) {
+          if (error){
+            console.log("error", error);
+          }else{
+            console.log("success saving", success);
+          }}
+      ).then((result) => {
+      StandardFuncs.stepThrough(object.gameid);
+      StandardFuncs.getAllData(object.gameid).then((result) => {       socket.emit('object update', result);
+      //console.log("sending object update", result);
+      }).catch((error)=>{
+        console.log("error saving", error)
+      });
     });
+  })
 });
 
 function createGame(gameid, user, cb){
@@ -274,15 +274,18 @@ function createGame(gameid, user, cb){
       let gameObj = new GameObject(gameid); //game variables and data
       let gameRounds = new Game(gameid,2,10); //gameplay and turn progression
       let map = GameMap.loadMapFromFile();
-      let players = []
-      StandardFuncs.addPlayer(user, gameRounds, gameObj, players);
-
-      gameModel = new GameModel({
+      let gameModel = new GameModel({
         _id: gameid,
         gameRounds: gameRounds,
         gameObj:gameObj,
-        players:[user]
+        players: [],
       });
+      let player = StandardFuncs.addPlayer(user, gameModel);
+      player[0].save(function(err, p){
+        if (err) console.log("error from playerModel",err);
+        //if (p) cb(game);
+        });
+      gameModel.players.push(player[1])
       let mapData = {};
       (function(){
         let i = 0;
@@ -308,49 +311,3 @@ function createGame(gameid, user, cb){
     };
   });
 };
-
-
-// let shutdown = function(){
-//   console.log("shutting down")
-//   saveGames();
-//   server.close()
-// }
-//
-// let saveGames = function(){
-//   console.log("in saveGame", GAME_LIST);
-//   GAME_LIST.forEach((game) =>{
-//       fs.writeFile(savedGamesFilePath+game.gameId+'.txt', JSON.stringify(game), function(err) {
-//         if(err) {
-//             return console.log("error loading", err);
-//         }
-//       });
-//         console.log("File saved");
-//     });
-//   };
-
-
-// //Run on server start to load saved games
-// let start = function(){
-//   fs.readdir(savedGamesFilePath, function( err, files ) {
-//         if( err ) {
-//             console.error( "Could not list the directory.", err );
-//             process.exit( 1 );
-//         } else{
-//         files.forEach( function( file, index ) {
-//           let name = file.replace('.txt','');
-//           console.log(name);
-//           fs.readFile(savedGamesFilePath+file, 'utf8', function (err,data) {
-//               if (err) {
-//                 return console.log(err);
-//               }
-//               console.log(data);
-//               GAME_LIST[name] = JSON.parse(data);
-//             });
-//         });
-//       }
-//     });
-//   };
-// start();
-//
-// process.on('SIGTERM', shutdown);
-// process.on('SIGINT', shutdown);

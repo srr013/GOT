@@ -3,6 +3,7 @@ let USERDATA = {};
 let STORE = sessionStorage;
 let GAME = '';
 let MAP = '';
+let PLAYER = '';
 let PLAYERS = '';
 let POPUP = '';
 let DATA_TO_SEND = [];
@@ -79,17 +80,23 @@ socket.on("load game", ([game,playerData,map]) => {
       }
     i++;
     }
-  loadPlayers(playerData);
-  getUserPlayer();
-  validationDisplay();
+  if (playerData.length == game.gameRounds.numPlayers){
+    loadPlayers(playerData);
+    getUserPlayer();
+    validationDisplay();
+  }
 });
 
-
-//Client receives square object update and logs it to GAME_BOARD, replacing previous object.
-socket.on('object update', (object) => {
-    console.log("client update received", object);
-    GAME = object;
-    //updateDOMFromSquareObject(object);
+socket.on('object update', ([game, playerData,map]) => {
+    console.log("client update received", game, playerData);
+    GAME = game;
+    if (map){
+        MAP = map;
+    }
+    PLAYERS = playerData;
+    loadPlayers(playerData);
+    getUserPlayer();
+    validationDisplay();
 });
 
 //Chat submission and appending to div
@@ -155,8 +162,10 @@ sendMessage('open game', [USERDATA,gameID]);
 }
 
 function submitTurn(){
-  console.log("Game",GAME);
-  //sendMessage('submit turn', GAME);
+  //console.log("Player",PLAYER.object.orders);
+  //do some validation here?
+  PLAYER.object.ready = true;
+  sendMessage('submit turn', PLAYER);
 }
 
 
@@ -165,6 +174,7 @@ function submitTurn(){
 
 //////// UTILITY FUNCTIONS ///////////////
 function sendMessage(message, data){
+    console.log("sending message")
     socket.emit(message, data);
     }
 
@@ -207,11 +217,11 @@ function getSquareObjFromID(id){
 ///////////////DISPLAY/DOM HANDLERS////////////////
 function validationDisplay(){
   let display = '';
-  if (GAME.gameObj.phase == 'start'){
+  if (GAME.gameObj.phase == 'start' || GAME.gameObj.phase == 'ordering'){
     display = orderValidation();
   }
   if (display == false){
-    console.log("order validation failed");
+    console.log("order validation failed");//not working
     return false;
   }else{
     $('#validation').text('Available Orders: '+ display);
@@ -251,13 +261,23 @@ function toggleOrderFormOptions(square){
 
 //Takes in an object and an array of key/value pairs built as arrays.
 //KV should be the key/value pairs that change. This function will trigger when the user deselects the square during the Orders/Action placement phase.
+function playerOwnsSquare(player,squareID){
+  let owned = false;
+  player.object.ownedSquares.forEach((s)=>{
+    if (s.id == squareID){
+      owned = true;
+    }
+  })
+  return owned;
+}
+
 function selectSquObject(event, obj, ...kv){
   let square = arguments[0].target.id;
   if (!arguments[0].target.id){
     square = arguments[0].target.parentElement.id;
   }
-  if (GAME.gameObj.phase == 'start' && square.length == 2){
-      if (POPUP == '' && PLAYER.object.ownedSquares.indexOf(square) != -1){
+  if ((GAME.gameObj.phase == 'ordering' || GAME.gameObj.phase == 'start') && square.length == 2){
+      if (POPUP == '' && playerOwnsSquare(PLAYER,square)){
         let popupForm = createSquarePopup(square);
         $('#'+square).append(popupForm);
         getOrderList();
@@ -320,6 +340,9 @@ function createSquare(data,i,j){
         subTitle.textContent = 'Supply: '+ supply+', '+ 'Power: '+power;
       }
     }
+    if (squ.port){
+      subTitle.textContent += ', Port';
+    }
     square.addEventListener('click', selectSquObject);
     return square;
 }
@@ -367,6 +390,9 @@ function saveOrder(element){
   //get the values from the HTML elements and store them
   let type = $('#popup > form > select').val();
   let order = {};
+  let name = (type == 1) ? 'Move': (type == 2) ? 'Support' : (type == 3) ? 'Raid' : (type == 4) ? 'Defense' : (type == 5) ? 'Consolidate Power' : null;
+  let star = ($('#usestar').prop('checked') == false) ? false : true;
+
   if ( type == '1'){//move
     let selections = $('#orderForm-conditionals input[type=button]').toArray();
     let destinations = [];
@@ -376,7 +402,7 @@ function saveOrder(element){
     }
     selections.forEach((d)=>{
       destinations.push([
-        d.id,
+        d.name,
         d.value,
         $('#attack'+d.id.charAt(d.id.length-1)).prop('checked')
       ])
@@ -384,22 +410,29 @@ function saveOrder(element){
       order = {
         id: $('#popup').parent().attr("id"),
         type: type,
-        name: (order.type = 1) ? 'Move': (order.type == 2) ? 'Support' : (order.type == 3) ? 'Raid' : (order.type == 4) ? 'Defense' : (order.type == 5) ? 'Consolidate Power' : null,
-        star: ($('#usestar').prop('checked') == false) ? false : true,
+        name: name,
+        star: star,
         picktoken: ($('#picktoken').prop('checked') == undefined || $('#picktoken').prop('checked') == false ) ? false : true,
-        destinations:destinations
+        destinations:destinations,
+        priority: 1,
       }
   }else if (type == '3'){ //raid
     //console.log("raidpri",$('#raidpriority').val());
     order = {
       id: $('#popup').parent().attr("id"),
       type: type,
-      priority: $('#raidpriority').val()
+      name: name,
+      star: star,
+      preference: $('#raidpriority:selected').val(),
+      priority: 1,
     }
   }else {
     order = {
       id: $('#popup').parent().attr("id"),
-      type: type
+      type: type,
+      name: name,
+      star: star,
+      priority: 1,
     }
   }
   if (validationDisplay() != false){
@@ -422,6 +455,7 @@ function saveOrder(element){
 }
 
 function loadPlayers(players){
+  clearUnits();
   console.log("loadPlayers", players);
   players.forEach((player) =>{
     let object = player.object;
@@ -444,6 +478,16 @@ function getUserPlayer(){
   return player;
 }
 
+function clearUnits(){
+  for (let column in MAP){
+    if (typeof MAP[column] == 'object'){
+      MAP[column].forEach((square)=>{
+        $('#'+square.id+' p.bottomonsquare').text('');
+      })
+    }
+  }
+}
+
 function placeUnits(player){
   for (let unit in player.object.units){
     player.object.units[unit].forEach((u)=>{
@@ -461,12 +505,12 @@ function highlightOwnedSquares(player){
   (player.house == 'Baratheon') ? color = 'rgba(255,215,0,.8)' :
   (player.house == 'Stark') ? color = 'rgba(255,255,255,.8)' : color = 'green'
   player.ownedSquares.forEach((square) =>{
-    let bg = getSquareObjFromID(square);
+    let bg = getSquareObjFromID(square.id);
   //  console.log(bg);
     if (bg.terrain == 1){
-    $('#'+square).css("background",'linear-gradient(30deg, '+color+',green 40%)')
+    $('#'+square.id).css("background",'linear-gradient(30deg, '+color+',green 40%)')
   }else{
-    $('#'+square).css("background",'linear-gradient(30deg, '+color+' ,blue 40%)')
+    $('#'+square.id).css("background",'linear-gradient(30deg, '+color+' ,blue 40%)')
     }
   });
 };
@@ -537,7 +581,7 @@ function addMoveElements(square){
         if (u==square.id){
           if ( unit != "Token"){
             let move = '<p>'+unit+': '+'</p>';
-            let destination = '<input type=button id='+unit+i+' onclick="setElement('+unit+i+')" value= "Select a Destination">';
+            let destination = '<input type=button id='+unit+i+' onclick="setElement('+unit+i+')" name='+unit+' value= "Select a Destination">';
             let attack = 'Attack? <input id=attack'+i+' type="checkbox" name="Attack?" checked><br>';
             elementList.push(move,destination, attack);
             i++;
@@ -563,15 +607,16 @@ function addMoveElements(square){
     elementList.forEach((e)=>{
       $('#orderForm-conditionals').append(e);
     });
+    getAcceptableSquares(square.id);
 }
 
 function addRaidElements(square){
   let priority = [
     'Priority: <select id=raidpriority>',
-      '<option value="0">Support</option>',
-      '<option value="1">Power Token</option>',
-      '<option value="2">Raid</option>',
-      '<option value="3">Defense (Requires Bonus)</option>',
+      '<option value="2">Support</option>',
+      '<option value="5">Consolidate Power</option>',
+      '<option value="3">Raid</option>',
+      '<option value="4">Defense (Requires Bonus)</option>',
     '</select>'].join("\n");
     $('#orderForm-conditionals').append(priority);
 }
@@ -582,15 +627,13 @@ function setElement(elementID){
   SELECTEDELEMENT = elementID.id;
 }
 
+ACCEPTABLESQUARES = [];
 function updatePopUp(square, unit){
   //check to see if square is valid
+  console.log("unit", unit)
   if (square){
     let parentSquareID = $('#popup').parent().attr("id");
-    let letter = parentSquareID[0];
-    let num = parseInt(parentSquareID[1]);
-    letter = letter.charCodeAt(0)
-    let acceptableSquares = getAcceptableSquares(letter, num, parentSquareID);
-    if (acceptableSquares.indexOf(square)!= -1){
+    if (ACCEPTABLESQUARES.indexOf(square)!= -1){
       //Update text
       if ($('#popup > form > select').val() == 1 && square){
         if ($('input[name="Move All?"]').css("checked", "checked")){
@@ -610,29 +653,70 @@ function updatePopUp(square, unit){
     }
   }
 }
-function getAcceptableSquares(letter,num,originID){
-  //incorporate order type - raid, support
-  let squares = [ String.fromCharCode(letter-1)+(num-1),
-    String.fromCharCode(letter-1)+num,
-    String.fromCharCode(letter-1)+(num+1),
-    String.fromCharCode(letter)+(num-1),
-    String.fromCharCode(letter)+(num+1),
-    String.fromCharCode(letter+1)+(num-1),
-    String.fromCharCode(letter+1)+num,
-    String.fromCharCode(letter+1)+(num+1),
-  ];
+
+function getAcceptableSquares(squareID, originID, shipsTested){
+  let letter = squareID[0];
+  letter = letter.charCodeAt(0)
+  let num = parseInt(squareID[1]);
+  let squares = [];
+  let top = (letter > 65) ? true : false;
+  let bottom = (letter < 71) ? true : false;
+  let left = (num > 1) ? true : false;
+  let right = (num < 8) ? true : false;
+  //console.log("top, bottom, left, right", top, bottom, left, right)
+  if (top){
+    squares.push(String.fromCharCode(letter-1)+num);
+  }if (top && left){
+    squares.push(String.fromCharCode(letter-1)+(num-1));
+  }if (top && right){
+    squares.push(String.fromCharCode(letter-1)+(num+1));
+  }if (bottom){
+    squares.push(String.fromCharCode(letter+1)+num);
+  }if (bottom && left){
+    squares.push(String.fromCharCode(letter+1)+(num-1));
+  }if (bottom && right){
+    squares.push(String.fromCharCode(letter+1)+(num+1));
+  }if (left){
+    squares.push(String.fromCharCode(letter)+(num-1));
+  }if (right){
+    squares.push(String.fromCharCode(letter)+(num+1));
+  }
+  if (!originID){
+    ACCEPTABLESQUARES = [];
+    originID = squareID;
+    shipsTested = [];
+  }
   let isLand = (getSquareObjFromID(originID).terrain == 1) ? true: false;
-  let i=0;
-  let acceptable = []
+  let newTerrain = false;
   squares.forEach((s) => {
-    let object = getSquareObjFromID(s);
-    if (object != undefined){
-      if (object.terrain == 1 && isLand){
-        acceptable.push(s);
-      }else if (object.terrain == 0 && !isLand){
-        acceptable.push(s);
+    let destination = getSquareObjFromID(s);
+    //From water to port - land terrain can be a port. Comes from Map. Ports allow a second move on a square w/ some exclusions. Ships can move into and out of ports.
+    //From port to water ^
+    if (destination != undefined){
+      if (isLand){
+        if (destination.terrain == 1){
+          if (ACCEPTABLESQUARES.indexOf(destination.id) == -1
+          && destination.id != originID){
+            ACCEPTABLESQUARES.push(destination.id);
+            newTerrain = true;
+          }
+      }else{
+        PLAYER.object.units.Ship.forEach((ship) =>{
+          if (destination.id == ship
+            && shipsTested.indexOf(ship) == -1){
+            shipsTested.push(ship)
+            getAcceptableSquares(ship, originID, shipsTested);
+            }
+        })
+      }
+    }else if (!isLand){
+      if (destination.terrain == 0){
+        if (ACCEPTABLESQUARES.indexOf(destination.id) == -1
+        && destination.id != originID){
+          ACCEPTABLESQUARES.push(destination.id);
+          }
+        }
       }
     }
   })
-  return acceptable;
 }

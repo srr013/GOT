@@ -20,19 +20,19 @@ class Game{
   constructor(gameid, numPlayers, numRounds){
     this.id = gameid;
     let startRound = [['conditionalActions',false],['enableOrderSelection',false]]
-    let actionRound = [['playersReady',false], ['resetPlayerStatus',false]]
+    let orderingRound = [['playersReady',false], ['resetPlayerStatus',false]]
     let attackRound = [['sortOrders',false], ['completeOrders',false], ['playersReady',false],['resetPlayerStatus',false]]
     let endRound = [['seasonCards', false], ['conditionalActions',false], ['playersReady',false], ['resetPlayerStatus',false], ['endTurn',false]]
-    this.round = [...startRound,...actionRound,...attackRound,...endRound];
-    this.game = Array.from(this.round);
+    this.newRound = [...startRound,...orderingRound,...attackRound,...endRound];
+    this.currentRound = Array.from(this.newRound);
     this.numRounds = numRounds;
-    this.currentRound = 1;
+    this.roundNum = 1;
     this.numPlayers = numPlayers;
     // this.seasonOne = Utilities.shuffle(new Deck('SeasonOne'));
     // this.seasonTwo = Utilities.shuffle(new Deck('SeasonTwo'));
     // this.seasonThree = Utilities.shuffle(new Deck('SeasonThree'));
     // this.wildlingsDeck = Utilities.shuffle(new Deck('Wildlings'));
-    console.log("game constructor complete")
+    //console.log("game constructor complete")
     }
   }
   module.exports = Game;

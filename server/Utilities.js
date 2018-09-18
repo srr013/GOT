@@ -16,6 +16,35 @@ exports.shuffle = function(array) {
     array[currentIndex] = array[randomIndex];
     array[randomIndex] = temporaryValue;
   }
-  console.log("shuffle", array)
   return array;
+}
+
+exports.getNeighbors = function(squareID){
+  let letter = squareID[0];
+  letter = letter.charCodeAt(0)
+  let num = parseInt(squareID[1]);
+  let squares = [];
+  let top = (letter > 65) ? true : false;
+  let bottom = (letter < 71) ? true : false;
+  let left = (num > 1) ? true : false;
+  let right = (num < 8) ? true : false;
+  //console.log("top, bottom, left, right", top, bottom, left, right)
+  if (top){
+    squares.push(String.fromCharCode(letter-1)+num);
+  }if (top && left){
+    squares.push(String.fromCharCode(letter-1)+(num-1));
+  }if (top && right){
+    squares.push(String.fromCharCode(letter-1)+(num+1));
+  }if (bottom){
+    squares.push(String.fromCharCode(letter+1)+num);
+  }if (bottom && left){
+    squares.push(String.fromCharCode(letter+1)+(num-1));
+  }if (bottom && right){
+    squares.push(String.fromCharCode(letter+1)+(num+1));
+  }if (left){
+    squares.push(String.fromCharCode(letter)+(num-1));
+  }if (right){
+    squares.push(String.fromCharCode(letter)+(num+1));
+  }
+  return squares;
 }

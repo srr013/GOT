@@ -9,24 +9,93 @@ let PlayerModel = require('../models/PlayerModel.js');
 let MapModel = require('../models/MapModel.js');
 
 //Runs the first function it finds that is false at [1]
-exports.stepThrough = function(game){
-  let round = game.game;//Need to figure out how to dupe each round into game when a round is complete.
-  let i = 0;
+exports.stepThrough = function(gameid,index,allData){
+  let i = (index == undefined) ? 0 : index;
+  if (allData == undefined){
+    let gameData = exports.getAllData(gameid)
+    .then((results)=>{
+        step(results);
+      })
+  }else{
+    allData = step(allData);
+  }
+}
+
+function step(alldata){
+  let i=0;
+  //console.log("round?", alldata)
+  let round = alldata[0].gameRounds.currentRound;
   while (round[i][1] == true){
     i++;
-  }
-  let result = eval(round[i][0]+'(game)');
-  let newresult = ''
-  console.log(result);
-  if (result[0]){
-    round[i][1] = true;
+  };
+  let roundResult = eval('GameFunctions.'+round[i][0]+'(alldata)');
+  //console.log(round,i);
+  if (roundResult[0]){
+    roundResult[1][0].gameRounds.currentRound[i][1] = round[i][1] = true;
     ++i;
-    newresult = this.stepThrough(result[1])[1];
+    exports.stepThrough(roundResult[1][0]._id,i,alldata);
   }else{
-    return result;
+    alldata[1].forEach((player)=>{
+      PlayerModel.update({_id:player._id},{'object': player.object}).exec();
+    })
+    GameModel.update({_id:alldata[0]._id},{'gameObj': roundResult[1][0].gameObj}).exec();
+    GameModel.update({_id:alldata[0]._id},{$set: {'gameRounds.currentRound': alldata[0].gameRounds.currentRound}}).exec();
+    console.log("steps complete");
   }
-  return newresult;
 }
+
+// exports.updateDB = function(Model,identifier,change){
+//   let save = new Promise(function(resolve,reject){
+//     console.log(Model+'.update('+identifier+','+change+').exec()')
+//     let result = eval(Model+'.update('+identifier+','+change+').exec()');
+//     if (result){
+//       resolve(result);
+//     }else{
+//       reject(error);
+//     }
+//   })
+//   .then((result)=>{
+//     console.log(result);
+//   })
+//   .catch((error)=>{
+//     console.log('Error saving to DB', error);
+//   })
+//   return save;
+// }
+
+exports.getAllData = function(gameid){
+  let game = new Promise(function(resolve, reject){
+    let result = GameModel.findOne({_id:gameid}).exec();
+    if(result){
+      resolve(result);
+    }else{
+      reject('Failure');
+    }
+  });
+  let players = new Promise(function(resolve, reject){
+    let result = PlayerModel.find({gameid:gameid}).exec();
+    if(result){
+      resolve(result);
+    }else{
+      reject('Failure');
+    }
+  });
+  let map = new Promise(function(resolve, reject){
+    let result = MapModel.findOne({_id:gameid}).exec();
+    if(result){
+      resolve(result);
+    }else{
+      reject('Failure');
+    }
+  });
+  let p = Promise.all([game,players,map])
+  .then(function(results){
+    return results;
+  }).catch(function(err){
+    console.log(error);
+  })
+  return p;
+};
 
 exports.getPlayerFromUser = function(userid, gameid){
   let p = new Promise(function(resolve, reject){
@@ -53,66 +122,86 @@ exports.getMapData = function(gameid){
   })
   return m;
 };
+exports.getAllPlayersData = function(gameid){
+  let players = new Promise(function(resolve, reject){
+    let result = PlayerModel.find({gameid:gameid}).exec();
+    if(result){
+      resolve(result);
+    }else{
+      reject('Failure');
+    }
+  })
+  return players;
+};
 
-exports.addPlayer = function(user, gameRounds, gameObj, players){
-  console.log("adding player from Standard Functions", gameRounds, user, players, gameObj);
-  if (players.length < gameRounds.numPlayers){
-    if (gameObj.phase == 'start'){
-      new Player(gameRounds, user, cb, players, gameObj);
+exports.getSinglePlayerData = function(playerID){
+  let player = new Promise(function(resolve, reject){
+    let result = PlayerModel.findOne({_id:playerID}).exec();
+    if(result){
+      resolve(result);
+    }else{
+      reject('Failure');
+    }
+  })
+  return player;
+};
+
+exports.getGameData = function(gameid){
+  let game = new Promise(function(resolve, reject){
+    let result = GameModel.find({gameid:gameid}).exec();
+    if(result){
+      resolve(result);
+    }else{
+      reject('Failure');
+    }
+  })
+  return game;
+};
+
+exports.updatePlayerObject = function(player){
+  //not a Promise
+  PlayerModel.update(
+    {_id:player._id},
+    {object:player.object},
+    function(error,success) {
+      if (error){
+        console.log("error", error);
+      }else{
+        console.log("success saving player object", success);
+      }}
+  )
+}
+
+exports.addPlayer = function(user, game){
+  console.log("adding player from Standard Functions", game);
+  if (game.players.length < game.gameRounds.numPlayers){
+    if (game.gameObj.phase == 'start'){
+      return new Player(game, user);
     }
   }else{
     console.log("game full");
   }
 };
-function cb(players, player, gameRounds, gameObj, user){
-  //console.log("cb beginning", players, player, user);
-  if (players.indexOf(player) == -1){
-    players.push(user);
-  };
-  GameModel.findOneAndUpdate(
-    {_id:gameRounds.id},
-    {players:players}, function(error,success) {
-      if (error){
-        console.log("error", error);
-      }else{
-        //console.log("success", success);
+
+exports.startGame = function(game){
+    console.log("starting Game", game)
+    let players = exports.getAllPlayersData(game.id).then((result)=>{
+      players = Utilities.shuffle(result);
+      let index = 0;
+      if (game.gameObj.houses.length == 0){
+        GameFunctions.getHouses(game);
       }
-    }
-  )
-  //console.log("game.gameObj?", players, gameObj);
-  if (players.length == gameRounds.numPlayers){
-    players = Utilities.shuffle(players);
-    let index = 0;
-    if (gameObj.houses.length == 0){
-      this.getHouses(gameObj);
-    }
-    players.forEach((userid) => {
-      let p = exports.getPlayerFromUser(userid, gameRounds.id)
-      .then((result) => {
-        //console.log(result);
-        if (!result.house){
-          result = GameFunctions.initializePlayer(result, gameObj);
+      //console.log(players);
+      players.forEach((player) => {
+        if (!player.object.house){
+          GameFunctions.initializePlayer(player, game);
         }else{
           console.log("user already assigned")
         }
       })
+      GameFunctions.initializeTracks(players, game);
+    })
       .catch((error) =>{
-        console.log("error caught", error);
+          console.log("error caught", error);
       })
-    });
-    return true;
-  }else{
-    return false;
-  }
-};
-
-
-function playersReady(game){ //Need a function on server that updates the gameobj.players.orders with player's moves when they emit a 'orders complete' status. This orders list should be sorted first to last: raid orders = 1,2,3, move orders = 4,5,6, consolidate power = 7,8,9. Ideally with gaps.
- let ready = true;
- game.gameObj.players.forEach((player) => {
-   if(player.ready == false){
-     ready = false;
-   }
- return ready;
- });
-};
+  };

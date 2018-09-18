@@ -1,5 +1,8 @@
 To do:
 -Cant chain moves together (move unit twice in same turn)
+-Improve order validation
+
+
 
 
 Phase 2:

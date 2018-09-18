@@ -45,6 +45,7 @@ class Square{
     this.terrain = '';
     this.castle = '';
     this.bonus = '';
+    this.port = false;
     let commacounter = 0;
     let i = 0;
     while (i < data.length){
@@ -58,6 +59,9 @@ class Square{
             }else if (commacounter == 2){
                 this.bonus += data[i]
                 i++;
+            }else if (commacounter == 3){
+              this.port = true;
+              i++;
             }
             }else{
                 commacounter += 1;
