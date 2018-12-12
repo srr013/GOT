@@ -20,6 +20,10 @@ var GameSchema = new mongoose.Schema({
   players: {
     type: Object,
     required: false,
+  },
+  messages: {
+    type: Object,
+    required: false,
   }
 });
 

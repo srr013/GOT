@@ -16,7 +16,7 @@ var bcrypt = require('bcrypt-nodejs');
 let Game = require('./server/GOT/Round.js');
 let GameObject = require('./server/GOT/GameObject.js');
 let GameFuncs = require('./server/GOT/GameFunctions.js');
-let StandardFuncs = require('./server/Standard_Functions.js');
+let StandardFunctions = require('./server/Standard_Functions.js');
 let GameMap = require('./server/Map.js');
 let database = require('./DatabaseInteractions.js');
 
@@ -122,8 +122,9 @@ let server = http.listen(process.env.PORT
 });
 
 
-
+let SOCKET = '';
 io.on('connection', function(socket){
+  SOCKET = socket;
   console.log('a user connected');
   socket.on('disconnect', function(){
       //should check to see if anyone in the room and save the game state to a file if not
@@ -133,26 +134,24 @@ io.on('connection', function(socket){
       console.log("message sent")
       io.emit('chat message',msg);
   });
-    socket.on('game list', (userid) =>{
-      let games = GameModel.findOne({userid:userid}, function(err, game){
-        console.log(game);
-        if (err) { return err; }
-        else {
-          return (null, game);
-        }
-      })
-    }
-
-  )
-    socket.on('new game', (user) => {
-      let gameid = Math.round(Math.random()*100000000000);
-      let cb = function(newgame){
-        socket.emit('open game', newgame);
-      };
-      createGame(gameid, user, cb);
+  socket.on('game list', (userid) =>{
+    let games = GameModel.findOne({userid:userid}, function(err, game){
+      console.log(game);
+      if (err) { return err; }
+      else {
+        return (null, game);
+      }
     })
+  })
+  socket.on('new game', (user) => {
+    let gameid = Math.round(Math.random()*100000000000);
+    let cb = function(newgame){
+      socket.emit('open game', newgame);
+    };
+    createGame(gameid, user, cb);
+  })
 
-function openGame(gameID){
+  function openGame(gameID){
     let g = new Promise(function(resolve, reject){
       let res = GameModel.findOne({_id:gameID}).exec();
       if(res){
@@ -179,15 +178,12 @@ function openGame(gameID){
       }
     })
     .then((result) => {
-      console.log("Adding Player", result);
       if (result.players.indexOf(USERDATA.userid) == -1 && result.players.length < result.gameRounds.numPlayers){
-        player = StandardFuncs.addPlayer(USERDATA.userid, result)
-
+        player = StandardFunctions.addPlayer(USERDATA.userid, result)
         player[0].save(function(err, document, success){
           if (err) console.log("error from playerModel",err);
           //if (p) cb(game);
           else {
-            console.log("saved Player", success)
             result.players.push(player[1]);
             GameModel.update({_id:gameID},
               {players: result.players},
@@ -197,7 +193,7 @@ function openGame(gameID){
                 }else{
                   console.log("success saving", success);
                 }}
-              ).then(StandardFuncs.startGame(result))
+              ).then(StandardFunctions.startGame(result))
             }
         })
       }else{
@@ -228,23 +224,30 @@ function openGame(gameID){
   socket.on('load game', (USERDATA) => {
       //console.log("loading game!", USERDATA.gameid, USERDATA.userid);
       //returns [game,players,map]
-      let data = StandardFuncs.getAllData(USERDATA.gameid)
-      .then(function(results){
-        console.log("full game data :)", results);
-        var nsp = io.of('/games/'+ results[0].gameid);//create namespace for this game
-        socket.emit('load game', results);
-      }).catch(function(err){
-        console.log(error);
-      })
+      if (USERDATA){
+        let data = StandardFunctions.getAllData(USERDATA.gameid)
+        .then(function(results){
+          var nsp = io.of('/games/'+ results[0].gameid);//create namespace for this game
+          socket.emit('load game', results);
+        }).catch(function(err){
+          console.log(err);
+        })
+      }
     });
 
-    socket.on('object update', (object) => {
-        console.log("server object update", object);
-        //GAME_LIST[object.gameid][object.index] = object;
-        //store it to the DB
-        socket.emit('object update', object);
-        console.log(GAME_LIST);
-    });
+    // socket.on('object update', (object) => {
+    //     console.log("server object update", object);
+    //     //GAME_LIST[object.gameid][object.index] = object;
+    //     //store it to the DB
+    //     socket.emit('object update', object);
+    //     console.log(GAME_LIST);
+    // });
+
+    function sendToClient(allData){
+      socket.emit('object update', allData);
+      console.log("sending object update", allData);
+    }
+
     socket.on('submit turn', (object) => {
       console.log("turn submitted", object)
       PlayerModel.update(
@@ -257,20 +260,18 @@ function openGame(gameID){
             console.log("success saving", success);
           }}
       ).then((result) => {
-      StandardFuncs.stepThrough(object.gameid);
-      StandardFuncs.getAllData(object.gameid).then((result) => {       socket.emit('object update', result);
-      //console.log("sending object update", result);
-      }).catch((error)=>{
-        console.log("error saving", error)
-      });
+      StandardFunctions.stepThrough(object.gameid, sendToClient, socket);
+    })
+    .catch((error)=>{
+      console.log("error on turn submission", error)
     });
   })
 });
 
+
 function createGame(gameid, user, cb){
   GameModel.findById(gameid, function(err,game){
     if (!game){
-      console.log("creating game");
       let gameObj = new GameObject(gameid); //game variables and data
       let gameRounds = new Game(gameid,2,10); //gameplay and turn progression
       let map = GameMap.loadMapFromFile();
@@ -279,8 +280,9 @@ function createGame(gameid, user, cb){
         gameRounds: gameRounds,
         gameObj:gameObj,
         players: [],
+        messages: [],
       });
-      let player = StandardFuncs.addPlayer(user, gameModel);
+      let player = StandardFunctions.addPlayer(user, gameModel);
       player[0].save(function(err, p){
         if (err) console.log("error from playerModel",err);
         //if (p) cb(game);

@@ -1,0 +1,32 @@
+.header {
+  height: 95vh;
+  background-image: linear-gradient(
+    to right bottom,
+    rgba($color-primary-light, 0.8),
+    rgba($color-primary-dark, 0.8)),
+    url(../img/hero.jpg);
+  /* specify multiple background images from front to back */
+  background-size: cover; /*fits the image inside of the box */
+  background-position: top;
+  clip-path: polygon(0 0, 100% 0, 100% 75%, 0 100%);
+  /*clip-path draws a polygon of visibility for the element. Can be done with any units. Clip path Clippy provides #s for standard shapes*/
+  position: relative;
+
+  &__logo-box{
+    /*absolute positioning*/
+    position: absolute;
+    top: 4rem;
+    left: 4rem; /* measurement starts from the parent element whose position is set to relative. In this case that's the header */
+  }
+  &__logo{
+      height: 3.5rem; /*width will be scaled according to the img*/
+  }
+  &__text-box{
+    position: absolute;
+    width: 60%;
+    top: 40%; /*in relation to the parent element*/
+    left: 50%;
+    transform: translate(-50%, -50%); /*in relation to the element itself*/
+    text-align: center; /*centers all text in the box, including anchors */
+  }
+}

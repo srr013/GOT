@@ -286,7 +286,7 @@ function selectSquObject(event, obj, ...kv){
       else if(SELECTEDELEMENT != ''){ //this will break if square IDs become 3 digits
         updatePopUp(square);
       }else{
-        console.log("idk");
+        console.log("Select an owned square");
       }
     }
 };
@@ -309,10 +309,12 @@ function createSquare(data,i,j){
     centerTitle.classList.add("topcenteronsquare")
     let subTitle = document.createElement('p');
     subTitle.classList.add("uppercenteronsquare");
+    let middleText = document.createElement('p');
+    middleText.classList.add("middleonsquare");
     let bottomText = document.createElement('p');
     bottomText.classList.add("bottomonsquare");
     square.classList.add('square');
-    $(square).append(squareID, centerTitle, subTitle, bottomText);
+    $(square).append(squareID, centerTitle, subTitle, middleText, bottomText);
     //square.style.height = (.99/data.length)*100+'%';
     //square.style.width = (.97/data[i].length)*100+'%';
 
@@ -413,6 +415,7 @@ function saveOrder(element){
         name: name,
         star: star,
         picktoken: ($('#picktoken').prop('checked') == undefined || $('#picktoken').prop('checked') == false ) ? false : true,
+        droptoken: ($('#droptoken').prop('checked') == undefined || $('#droptoken').prop('checked') == false ) ? false : true,
         destinations:destinations,
         priority: 1,
       }
@@ -455,7 +458,7 @@ function saveOrder(element){
 }
 
 function loadPlayers(players){
-  clearUnits();
+  clearBoard();
   console.log("loadPlayers", players);
   players.forEach((player) =>{
     let object = player.object;
@@ -478,22 +481,43 @@ function getUserPlayer(){
   return player;
 }
 
-function clearUnits(){
+function clearBoard(){
   for (let column in MAP){
     if (typeof MAP[column] == 'object'){
       MAP[column].forEach((square)=>{
-        $('#'+square.id+' p.bottomonsquare').text('');
+        clearSquare(square)
       })
     }
   }
+}
+function clearSquare(square){
+  $('#'+square.id+' p.middleonsquare').text('');
+  $('#'+square.id+' p.bottomonsquare').text('');
+  if (square.terrain == 0){
+      $('#'+square.id).css('background','blue');
+  } else{
+      $('#'+square.id).css('background','green');
+  };
 }
 
 function placeUnits(player){
   for (let unit in player.object.units){
     player.object.units[unit].forEach((u)=>{
-      let unitText = $('#'+u+' p.bottomonsquare').text();
+      let squareDefense = 0;
+      let unitText = $('#'+u+' p.middleonsquare').text();
       unitText = unitText +" "+ unit;
-      $('#'+u+' p.bottomonsquare').text(unitText);
+
+      //Figure out how to display this and alter the values dynamically
+
+      // squareDefense = $('#'+u+' p.bottomonsquare').text();
+      // console.log("squ" ,u, squareDefense[squareDefense.length-1])
+      // if (!squareDefense){
+      //   squareDefense= 0;
+      // }
+      // (unit == 'Footman') ? squareDefense +=1 : (unit == 'Knight') ? squareDefense += 2 : (unit == 'Ship') ? squareDefense++ : null;
+      // console.log(squareDefense);
+      $('#'+u+' p.middleonsquare').text(unitText);
+      $('#'+u+' p.bottomonsquare').text('Units: '+squareDefense +' Orders: 0  Total Defense:'+squareDefense);
     })
   }
 };
@@ -513,6 +537,7 @@ function highlightOwnedSquares(player){
     $('#'+square.id).css("background",'linear-gradient(30deg, '+color+' ,blue 40%)')
     }
   });
+  //update player card colors to the player's color
 };
 
 function toggleBottomBar(){

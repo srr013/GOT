@@ -1,0 +1,37 @@
+Game
+  Top Bar
+    Menu Icon (dots) - picture
+    Turn Number - label
+    Number of Castles - slider
+    Supply - slider
+    Tracks 1,2,3 - slider
+    Wildlings - slider
+
+  Board
+    Tile
+      props:
+        terrain = 1,2
+        castle = C, S, ''
+        bonus = countOF C,S,P
+        defense = number
+        ready = NA, yes, no (shows order, green/red status for mustering, etc.)
+
+  Bottom Bar
+    Tabbed View
+      Orders
+        Placeholder - static dimmed version of icon that can't be moved
+        Icon - can be dragged and dropped, snaps to place
+      Bidding
+        3 track labels and number fields
+
+    Power Tokens Icon (skinny info strip)
+      Placeholder
+      Icon
+    Chat View
+    Tabbed View
+      Units View
+        Placeholder
+        Icon
+      Cards View
+        Placeholder
+        Icon

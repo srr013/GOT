@@ -1,52 +1,126 @@
-html {
-    font-size:12pt;
-    margin:0;
-    padding:0;
-    -webkit-touch-callout: none; /* iOS Safari */
-  -webkit-user-select: none; /* Safari */
-   -khtml-user-select: none; /* Konqueror HTML */
-     -moz-user-select: none; /* Firefox */
-      -ms-user-select: none; /* Internet Explorer/Edge */
-          user-select: none; /* Non-prefixed version, currently
-                                supported by Chrome and Opera */
-}
-#topbar {
-    position:sticky;
-    height: 5vh;
+@import "abstracts/functions";
+@import "abstracts/mixins";
+@import "abstracts/variables";
+
+@import "base/animations";
+@import "base/base";
+@import "base/typography";
+@import "base/utilities";
+
+@import "components/button";
+@import "components/composition";
+
+@import "pages/home";
+
+@import "layout/header";
+@import "layout/grid";
+
+
+/*
+live-server to run the live-server
+npm run compile:sass to run that line from package.json (to compile sass automatically)
+*/
+*,
+*::after,
+*::before {
+  margin:0;
+  padding:0;
+  box-sizing: inherit;
 }
 
-#bottombar {
-    position: fixed;
+html{
+  font-size: 62.5%;
+}
+
+body {
+  font-family: "Lato", sans-serif;/*
+  setting font family on the body element allows that setting to be inherited by all child elements on the body.
+  */
+  font-weight: 400;
+  font-size: 1.6rem;
+  line-height: 1.7; /*lines will be 1.7* the size they normally are*/
+  color: #777;
+  box-sizing: border-box;
+  position: relative;
+  top:0;
+  left:0;
+}
+
+.top-bar {
     display: block;
-    z-index:1;
-    bottom:0vh;
-    left: 1vw;
-    width:98vw;
-    height: 25vh;
-    background-color: rgba(0,0,0,.1);
-    border-radius: 2rem 2rem 0 0;
-    margin: 0 0 .4rem 0;
+    height: 8vh;
+    width: 100vw;
+    background-color: darkred;
+}
+.menu-icon{
+  position: absolute;
+  left: 0;
+  top: .5rem;
+  height: 5vh;
+  &:hover{
+    box-shadow: 0 1rem 2rem rgba(0,0,0,.2);
+    background-color:rgba(0,0,0,0);
+  }
+
 }
 
-#gameboard {
-    position: absolute;
-    height: 100vh;
-    top:0vh;
-    z-index: -1;
-    width: 100vw;
-    margin: 5vh 0 30vh 0;
-    left:left;
-    display:flex;
-    flex-wrap:wrap;
-    align-items: center;
-    justify-content:flex-start;
+
+.bottom-bar {
+    max-width: $grid-width;
+    height: 20vh;
+    background-color: rgba(0,0,0,.2);
+    border-top: 0;
 }
-.userdataform{
-  display: none;
-  position: absolute;
-  left: 30vw;
-  top: 30vh;
+.bottom-third{
+  width: 33%;
+
 }
+
+.game-board {
+  display: block;
+  height: 75vh;
+  z-index: -1;
+  width: 100vw;
+  flex-wrap:wrap;
+  align-items: center;
+  justify-content:flex-start;
+}
+
+.icon {
+  width: 3rem;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .login{
   border: .005rem dotted black;
@@ -313,14 +387,4 @@ form button { width: 19.5%; background: rgb(130, 224, 255); border: none; paddin
 @keyframes fadeIn {
     from {opacity: 0;}
     to {opacity:1 ;}
-}
-
-#clientdatawindow {
-    position: fixed;
-    display: block;
-    right:1vw;
-    top: 20vh;
-    width:15vw;
-    height: 50vh;
-    background-color: rgba(0,0,0,.2);
 }

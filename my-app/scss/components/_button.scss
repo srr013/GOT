@@ -1,0 +1,74 @@
+.btn{
+  &:link,
+    &:visited { /*:link is a pseudo class of the btn. Used to style elements under a special condition. In this case we're styling the button so it looks the same before and after clicked, and doing so because this is an anchor element*/
+    text-transform: uppercase;
+    text-decoration: none; /*removes underline from hyperlink */
+    padding: 1.5rem 4rem; /*padding is adding additional size to the link*/
+    display: inline-block; /*box model treats this as a normal block element. do this if you're giving padding, height/width to elements.*/
+    border-radius: 10rem;
+    transition: all .2s;
+    position: relative;
+    &:hover{
+      transform: translateY(-.3rem);
+      box-shadow: 0 1rem 2rem rgba($color-black,.2);
+      &::after{
+        transform: scaleX(1.4) scaleY(1.6); /*increases the size of the element */
+        opacity: 0;
+      }
+    }
+  }
+  &:active{
+    /*used when clicked*/
+    transform: translateY(-.1rem); /*this is in relation to the initial state, not the state from hover or another action */
+    box-shadow: 0 .5rem 1rem rgba($color-black,.2)
+  }
+  &--white {
+    background-color: #fff;
+    color: $color-grey-dark;
+    &::after{
+        background-color: #fff;
+      }
+  }
+  &::after{ /*adds a virtual element after the selected element, which can then be styled. Requires a content and display property. The element is treated as a child of the .btn, so 100% is same size. absolute position still requires parent to have relative position.*/
+    content:"";
+    display: inline-block;
+    height: 100%;
+    width: 100%;
+    border-radius: 100px;
+    position: absolute;
+    top:0;
+    left:0;
+    z-index: -1;
+    transition: all .4s;
+  }
+
+
+  &--animated{
+    animation: moveInBottom .5s ease-out .75s;
+    animation-fill-mode: backwards; /*automatically applies the 0% styles from the animation before animation starts, so the button is invisible before it begins animating (.75s delay causes it to show then animate, this fixes that)*/
+  }
+}
+
+.btn-text {
+  &:link,
+  &:visited{
+    font-size: $default-font-size;
+    color: $color-primary;
+    display: inline-block;
+    text-decoration: none;
+    border-bottom: 1px solid $color-primary;
+    padding: 3px;
+    transition: all .2s;
+
+  }
+  &:hover{
+    background-color: $color-primary;
+    color: $color-white;
+    box-shadow: 0 1rem 2rem rgba($color-black,.15);
+    transform: translateY(-2px);
+  }
+  &:active{
+    box-shadow: 0 .5rem 1rem rgba($color-black, .15);
+    transform: translateY(-2px);
+  }
+}

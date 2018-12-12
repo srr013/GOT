@@ -1,13 +1,80 @@
-To do:
+Todo:
+update player supply and castle data
+  on move and attack completion##Server > open game should pass in AllData instead of just game to startGame(). Reorganize so this can filter down to getSupply for map data.
+
+  -check for win
+
+  on init
+
+Season card draw logic
+Season card effects:
+  Disallow placing of march+1 and all from other order types
+  Bid for tracks
+  collect PTs
+  muster
+  update supply
+  wildlings attack - just the hook
+  Choice cards - muster/supply/nothing, collect/bid/nothing, noMarch+1/nodefense/nothing
+
+  log decisions to be made to conditional actions for: muster, bidding, wildlings, choice cards
+
+Client side in React
+Client side of decisions from above
+
+
+
+Bugs/Improvements:
+Movement:
 -Cant chain moves together (move unit twice in same turn)
--Improve order validation
+-Improve order validation (client)
+-Move priority not implemented
+-Consolidate Power plays too early - keep them on the board until conditional round so that you can gain a poop by taking a city.
+-Update castles upon move
+
+Attacking:
+Add client-side interface
+Code to resolve attacks based on card selection
+Retreated unit status
+Remove orders from attacked square on successful attack
+
+Message logging:
+Player name instead of ID
+Save messages to DB w/ game
 
 
+HTML:
+-no display for player, player statistics (power tokens, supply), game tracks, # castles,
+-no div to choose PTs in bidding, cards during attacks
+-chat screen improvements
+-Show game pieces, power tokens, cards in a div
+-game board tiles - show total defense + support
+
+
+-Have an option that allows you to redirect troops after seeing orders instead of just playing moves immediately. This adds more gameplay but will take longer.
+-(Allow real-time-ish gameplay vs turn-based)
+
+
+#Start transition of HTML to templates. Variables will be useful moving forward for all types of displays.
+
+When to update square's defense display:
+DONE - on player init - server - units only
+  -Go through each owned square and run updateOwnedSquare
+
+on order placement (and change) - client
+  -support updates its neighbors and sends data to client
+
+DONE - on raid - server runs updateOwnedSquareOrders with remove=true
+
+on move and on attack completion - server gets neighbors and if any support is removed from neighbors as a result of an attack it updates ownedSquare accordingly
+
+DONE - at end of turn - server
+  - clear out defense, support. not unit strength.
 
 
 Phase 2:
 Wildlings attacks and effects
 Ships in port
+Garrisons
 
 Whole board:
 https://public.dm2301.livefilestore.com/y2piakcwisHvHeIN4SmjSvCQLQ_rE-6Tc3qRZdyfWT27EydMyQ1fMWMosvsrPi6XbEek1Tn-a6gExnzoFnfEk-_9W9OO34P-rioJGf4XbEjXtc/32.1.0.png?rdrts=90591333
@@ -24,21 +91,63 @@ file:///home/srr013/Downloads/Manifest_of_Wildlings_Cards.pdf
 Seasons:
 https://cf.geekdo-images.com/images/pic2428329.png
 
-old notes:
-client.js code is a mess. Move to HTML/CSS templates? Separate login, new/join game, and actual game pages into separate HTML.
-
-Implement action forms on client and action functions in Game
-  funcs: raid, move/attack, defense, support, consolidate power, submit data (any form)
-  client forms: action form for above actions, bidding form for tracks and wildlings, choice form for season cards.
-  Submit turn action > tie into Game.playersReady
 
 
-Deck, card file read & import, card object setup
 
-Implement Card-related functions in Game.
-  -fighting: swords and fortress
 
-Implement client DOM updates and HTML updates using data from Game:
-  activity log (main source of game info)
-  square display and updating
-    display: Castle/Stronghold, square ID, selected move, number and type of units + defense + support
+Card data:
+#
+"Ser Kevan Lannister"
+1
+"If you are attacking, all of your participating Footman (including supporting Lannister footmen) add+2 combat strength instead of +1."
+#
+"Tyrion Lannister"
+1
+"You may immediately return your opponent's House card to his hand. He must then choose a different House card. If he has no other House cards in hand, he cannot use a House card this combat."
+#
+"Ser Jaime Lannister"
+2
+S
+#
+"The Hound"
+2
+FF
+#
+"Ser Gregor Clegane"
+3
+SSS
+#
+"Tywin Lannister"
+4
+"If you win this combat gain two Power tokens"
+#
+
+
+
+"Patchface"
+0
+"After combat, you may look at your opponents hand and discard one card of your choice"
+#
+"Salladhor Saan"
+1
+"If you are being supported in this combat, the combat strength of all non-Baratheon ships is reduced to 0"
+#
+"Melissandre"
+1
+S
+#
+"Brienne of Tarth"
+2
+SF
+#
+"Ser Davos Seaworth"
+2
+"If Stannis Boratheon is in your discard pile, this card gains +1 combat strength and a sword icon"
+#
+"Renly Baratheon"
+3
+"If you win this combat, you may upgrade one of participating Footmen (or one supporting Baratheon footman), to a knight."
+#
+"Stannis Baratheon"
+4
+"If your opponent has a higher position on the Iron Throne Influence track than you, this card gains +1 combat strength"

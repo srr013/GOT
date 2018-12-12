@@ -1,19 +1,21 @@
 'use strict';
 let fs = require('fs');
+let Card = require('./Card.js');
 
 class Deck{
-  constructor(type){
+  constructor(filename,type){
     //load a text file that corresponds with the type. Text file should contain all cards in the deck.
     this.cardList = [];
-    // let results = fs.readFileSync('server/Decks/'+type,'utf-8');
-    // console.log("loading deck",type, results)
-    // //the deck should be setup as a list of objects
-    // while (results.length < 0){
-    //   this.cardList.append(results.shift())
-    }
+    let results = fs.readFileSync('server/GOT/Decks/'+filename,'utf-8');
+    //console.log("results", results);
+    results = JSON.parse(results);
+    results.forEach((card)=>{
+      this.cardList.push(new Card(card, type));
+    })
+  }
 
   drawCard(){
-    return this.cardList[0];
+    return this.cardList.shift();
   }
 
 }

@@ -23,6 +23,7 @@ module.exports = class Player{
     this.strongholdCount = 0;
     this.totalCastles = 0;
     this.actionQueue = [];
+    this.attackDeck = [];
 
     let p = new PlayerModel({
       user: user,
@@ -35,11 +36,6 @@ module.exports = class Player{
   }
 
   //
-   updateTracks(gameObj,list){
-    gameObj.throneTrack.findIndex(this.number);
-    gameObj.ravenTrack.findIndex(this.number);
-    gameObj.swordTrack.findIndex(this.number);
-  }
 
    updateSupply(){
     let supply = 0;

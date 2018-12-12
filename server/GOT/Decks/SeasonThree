@@ -1,22 +1,17 @@
-"Wildlings Attack" x 3
-"The wildlings attack with their current strength. All players must bid power tokens to bolster the Night's Watch and prevent a victory"
-function()
-#
-"Rains of Autumn"
-"Players cannot assign their Special March +1 Order during the upcoming Planning Phase"
-1
-#
-"Storm of Swords"
-"Players cannot assign Defense orders during the upcoming Planning Phase (including special)"
-1
-#
-"Feast for Crows"
-"Players cannot assign Consolidate Power orders during the upcoming Planning Phase (including special)"
-1
-#
-"Web of Lies"
-"Players cannot assign Support orders during the upcoming Planning Phase (including special)"
-1
-#
-"Put to the Sword" x 2
-"The holder of the Valyrian Steel Blade token chooses: 1. No March +1 orders during the next Planning Phase, 2. No Defense Orders during the next Planning Phase, 3. Nothing happens"
+[
+{"name": "Wildlings Attack",
+"description":The wildlings attack with their current strength. All players must bid power tokens to bolster the Night's Watch and prevent a victory},
+"function":null;
+{"name": "Rains of Autumn",
+"description":"Players cannot assign their Special March +1 Order during the upcoming Planning Phase"},
+{"name": "Storm of Swords,
+"Players cannot assign Defense orders during the upcoming Planning Phase (including special)"},
+{"name": "Feast for Crows,
+"description":"Players cannot assign Consolidate Power orders during the upcoming Planning Phase (including special)"},
+{"name": "Web of Lies",
+"description":"Players cannot assign Support orders during the upcoming Planning Phase (including special)",
+"special":1},
+{"name": "Put to the Sword",
+"description":"The holder of the Valyrian Steel Blade token chooses: 1. No March +1 orders during the next Planning Phase, 2. No Defense Orders during the next Planning Phase, 3. Nothing happens"
+}
+]

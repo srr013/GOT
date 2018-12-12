@@ -14,6 +14,9 @@ class GameObject{
     this.orderList = [],
     this.houses = ['Lannister','Baratheon'],
     this.conditionalActionList = []
+    this.seasonOne = [];
+    this.seasonTwo = [];
+    this.seasonThree = [];
   };
    updatePlayerList(players, player){
     if (this.phase == 'start'){

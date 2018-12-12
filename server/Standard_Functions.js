@@ -9,39 +9,69 @@ let PlayerModel = require('../models/PlayerModel.js');
 let MapModel = require('../models/MapModel.js');
 
 //Runs the first function it finds that is false at [1]
-exports.stepThrough = function(gameid,index,allData){
+exports.stepThrough = function(gameid,cb, socket, index, allData, MESSAGES){
+  if (!MESSAGES) {MESSAGES = []};
   let i = (index == undefined) ? 0 : index;
   if (allData == undefined){
-    let gameData = exports.getAllData(gameid)
+    exports.getAllData(gameid)
     .then((results)=>{
-        step(results);
+        allData = step(results, cb, socket, MESSAGES);
       })
   }else{
-    allData = step(allData);
+    allData = step(allData, cb, socket, MESSAGES);
   }
 }
 
-function step(alldata){
+function step(allData, cb, socket, MESSAGES){
   let i=0;
-  //console.log("round?", alldata)
-  let round = alldata[0].gameRounds.currentRound;
+  //console.log("round?", allData)
+  let round = allData[0].gameRounds.currentRound;
   while (round[i][1] == true){
     i++;
   };
-  let roundResult = eval('GameFunctions.'+round[i][0]+'(alldata)');
-  //console.log(round,i);
+  let roundResult = eval('GameFunctions.'+round[i][0]+'(allData)');
+  if (roundResult[2]) {
+  if (Array.isArray(roundResult[2])) MESSAGES.push(...roundResult[2]);
+    else{
+      MESSAGES.push(roundResult[2]);
+    }
+  }
+  //console.log("Message logged?", MESSAGES);
   if (roundResult[0]){
     roundResult[1][0].gameRounds.currentRound[i][1] = round[i][1] = true;
     ++i;
-    exports.stepThrough(roundResult[1][0]._id,i,alldata);
+    exports.stepThrough(roundResult[1][0]._id,cb,socket,i, allData, MESSAGES);
   }else{
-    alldata[1].forEach((player)=>{
+    allData[1].forEach((player)=>{
       PlayerModel.update({_id:player._id},{'object': player.object}).exec();
     })
-    GameModel.update({_id:alldata[0]._id},{'gameObj': roundResult[1][0].gameObj}).exec();
-    GameModel.update({_id:alldata[0]._id},{$set: {'gameRounds.currentRound': alldata[0].gameRounds.currentRound}}).exec();
-    console.log("steps complete");
+    let save = new Promise(function(resolve,reject){
+      let obj = GameModel.update({_id:allData[0]._id},{'gameObj': roundResult[1][0].gameObj}).exec();
+      let rounds = GameModel.update({_id:allData[0]._id},{$set: {'gameRounds.currentRound': allData[0].gameRounds.currentRound}}).exec();
+      allData[1].forEach((player)=>{
+        exports.savePlayerObject(player);
+      })
+      exports.sendUpdateMessages(socket, MESSAGES);
+      game.messages.push(...MESSAGES)
+      if (obj && rounds){
+        resolve(allData)
+      }else{
+        reject("Failure")
+      }
+    }).then((allData)=>{
+          console.log("steps complete");
+          cb(allData);
+      }).catch((error)=>{
+        console.log("error saving Game", error);
+      })
   }
+}
+
+exports.sendUpdateMessages = function(socket,messages){
+  console.log("Outbound messages", messages)
+  messages.forEach((msg) =>{
+    if (msg != ''){socket.emit('chat message', msg)}
+  })
 }
 
 // exports.updateDB = function(Model,identifier,change){
@@ -158,18 +188,53 @@ exports.getGameData = function(gameid){
   return game;
 };
 
-exports.updatePlayerObject = function(player){
-  //not a Promise
-  PlayerModel.update(
-    {_id:player._id},
-    {object:player.object},
-    function(error,success) {
-      if (error){
-        console.log("error", error);
+exports.savePlayerObject = function(player){
+  if (player){
+    let p = new Promise(function(resolve,reject){
+      let result = PlayerModel.update(
+          {_id:player._id},
+          {object:player.object},
+          function(error,success) {
+            if (error){
+              console.log("error", error);
+            }else{
+              console.log("player.object updated");
+            }}
+        )
+        if (result){
+          resolve()
+        }else{
+          reject("Error", error)
+        }
+    })
+    return p;
+  }else{
+    console.log("Player is empty")
+  }
+}
+exports.saveGameObject = function(game){
+  if (game.gameObj){
+    let g = new Promise(function(resolve,reject){
+      let result = GameModel.update(
+        {_id: game.id},
+      {gameObj: game.gameObj},
+      function(error,success) {
+        if (error){
+          console.log("error", error);
+        }else{
+          console.log("game.gameObj saved");
+        }
+      })
+      if (result){
+        resolve()
       }else{
-        console.log("success saving player object", success);
-      }}
-  )
+        reject("Error", error)
+      }
+    })
+    return g;
+  }else{
+    console.log("game.gameObj is empty", game)
+  }
 }
 
 exports.addPlayer = function(user, game){
@@ -189,17 +254,21 @@ exports.startGame = function(game){
       players = Utilities.shuffle(result);
       let index = 0;
       if (game.gameObj.houses.length == 0){
-        GameFunctions.getHouses(game);
+        game = GameFunctions.getHouses(game);
       }
       //console.log(players);
       players.forEach((player) => {
         if (!player.object.house){
-          GameFunctions.initializePlayer(player, game);
+          [player, game] = GameFunctions.initializePlayer(player, game);
+          player = GameFunctions.updatePlayerSupply(player);
+          player = GameFunctions.updatePlayerCastles(player);
+          exports.savePlayerObject(player);
         }else{
           console.log("user already assigned")
         }
       })
-      GameFunctions.initializeTracks(players, game);
+      game = GameFunctions.initializeGame(players, game);
+      exports.saveGameObject(game);
     })
       .catch((error) =>{
           console.log("error caught", error);

@@ -1,15 +1,13 @@
-"Winter is Coming"
-"Shuffle and choose again"
-#
-"Last Days of Summer"
-"Nothing happens"
-#
-"Game of Thrones" x 3
-"Each player collects a power token for each power icon present in controlled areas. Collect an additional token for each controlled port containing a Ship"
-#
-"Clash of Kings" x 3
-"Remove all the influence tokens from the three tracks and bid for position on each track"
-#
-"Dark Wings, Dark Words" x 2
-"Holder of the Messenger Raven chooses: 1. All players must bid for position on the influence tracks, 2. All players collect power tokens, 3. Nothing happens"
-1
+[
+{"name": "Winter is Coming",
+"description":"Shuffle and choose again"},
+{"name": "Last Days of Summer",
+"description":"Nothing happens"},
+{"name": Game of Thrones",
+"description":"Each player collects a power token for each power icon present in controlled areas. Collect an additional token for each controlled port containing a Ship"},
+{"name": "Clash of Kings",
+"description":"Remove all the influence tokens from the three tracks and bid for position on each track"},
+{"name": "Dark Wings, Dark Words",
+"description":"Holder of the Messenger Raven chooses: 1. All players must bid for position on the influence tracks, 2. All players collect power tokens, 3. Nothing happens",
+"special":1}
+]
